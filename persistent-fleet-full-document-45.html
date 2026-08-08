@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Persistent Fleet — Autonomous Demurrage &amp; Detention Defence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EFF1EE; --paper-2:#E6E9E5;
+  --ink:#17242C; --ink-soft:#4A5A62;
+  --rule:#C3CAC6; --rule-soft:#D8DCD8;
+  --stamp:#A83B22; --stamp-bg:#F5E6E1;
+  --sea:#1D5B6E; --sea-bg:#E1EAEC;
+  --flag:#B0781F; --flag-bg:#F5EBD9;
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:940px;margin:0 auto;padding:0 32px 120px}
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.2;margin:0}
+p{margin:0 0 1.1em}
+a{color:var(--sea)}
+code{font-family:var(--mono);font-size:.88em;background:var(--paper-2);padding:1px 5px;border-radius:2px}
+.label{font-family:var(--display);font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+
+.masthead{border-bottom:2px solid var(--ink);padding-top:40px;margin-bottom:8px}
+.masthead h1{font-size:52px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.masthead .sub{font-family:var(--display);font-size:19px;font-weight:400;color:var(--ink-soft);margin-bottom:26px}
+.fields{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule)}
+.field{padding:10px 14px 12px;border-right:1px solid var(--rule)}
+.field:last-child{border-right:none}
+.field .label{display:block;margin-bottom:3px}
+.field .val{font-family:var(--mono);font-size:13px;font-weight:500}
+
+section{margin-top:64px;scroll-margin-top:20px}
+.sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--ink);padding-bottom:8px;margin-bottom:24px}
+.sec-head .idx{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--stamp)}
+.sec-head h2{font-size:28px;letter-spacing:-.01em}
+h3{font-size:19px;margin:32px 0 10px}
+h4{font-size:15px;margin:22px 0 6px;font-weight:600}
+
+.toc{border:1px solid var(--rule);background:var(--paper-2);padding:20px 24px;margin-top:36px}
+.toc ol{margin:10px 0 0;padding-left:0;list-style:none;columns:2;column-gap:36px}
+.toc li{font-family:var(--display);font-size:14px;padding:3px 0;break-inside:avoid}
+.toc li a{text-decoration:none;color:var(--ink)}
+.toc li a:hover{color:var(--stamp)}
+.toc .n{font-family:var(--mono);font-size:11.5px;color:var(--stamp);margin-right:8px}
+
+.lede{font-size:20px;line-height:1.55;border-left:3px solid var(--stamp);padding-left:20px;margin-bottom:28px}
+
+.gloss{border-top:1px solid var(--rule)}
+.gloss .row{display:grid;grid-template-columns:210px 1fr;gap:24px;padding:14px 0;border-bottom:1px solid var(--rule-soft)}
+.gloss .term{font-family:var(--display);font-weight:600;font-size:15px}
+.gloss .term .alt{display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--ink-soft);margin-top:2px}
+.gloss .def{font-size:16px;line-height:1.55}
+
+table{width:100%;border-collapse:collapse;font-size:15px;margin:18px 0}
+th{font-family:var(--display);font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-align:left;padding:8px 12px;border-bottom:1.5px solid var(--ink);color:var(--ink-soft);vertical-align:bottom}
+td{padding:11px 12px;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.5}
+td.mono,th.mono{font-family:var(--mono);font-size:13px;white-space:nowrap}
+td.r{text-align:right;font-family:var(--mono);font-size:13px;white-space:nowrap}
+tr.tot td{border-top:1.5px solid var(--ink);border-bottom:none;font-weight:600;background:var(--paper-2)}
+.bad{color:var(--stamp)}
+.good{color:var(--sea)}
+
+.ba td:nth-child(2){background:#F7EFEC}
+.ba td:nth-child(3){background:#E9F0F1}
+.ba td:nth-child(1){font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink-soft)}
+
+.leak{display:grid;grid-template-columns:118px 1fr;gap:26px;margin:30px 0;align-items:start}
+.stamp{border:2px solid var(--stamp);color:var(--stamp);padding:9px 8px 10px;text-align:center;transform:rotate(-1.4deg);background:var(--stamp-bg)}
+.stamp .k{font-family:var(--display);font-size:9.5px;font-weight:700;letter-spacing:.16em;display:block}
+.stamp .v{font-family:var(--mono);font-size:30px;font-weight:600;line-height:1.05;display:block;margin:2px 0 3px}
+.stamp .amt{font-family:var(--mono);font-size:11.5px;font-weight:500;display:block;border-top:1px solid var(--stamp);padding-top:4px}
+.leak h3{margin:0 0 8px;font-size:19px}
+.leak p{font-size:16px;margin-bottom:.8em}
+.leak p:last-child{margin-bottom:0}
+
+.note{border:1px solid var(--sea);background:var(--sea-bg);padding:16px 20px;margin:22px 0;font-size:16px}
+.note .label{color:var(--sea);display:block;margin-bottom:5px}
+.warn{border:1px solid var(--flag);background:var(--flag-bg);padding:16px 20px;margin:22px 0;font-size:16px}
+.warn .label{color:var(--flag);display:block;margin-bottom:5px}
+.note p:last-child,.warn p:last-child{margin-bottom:0}
+
+figure{margin:30px 0;border:1px solid var(--rule);background:#fff;padding:22px 20px 14px}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:var(--display);font-size:12px;color:var(--ink-soft);border-top:1px solid var(--rule-soft);padding-top:9px;margin-top:14px}
+figcaption b{font-weight:600;color:var(--ink)}
+
+pre{background:var(--ink);color:#DCE4E4;font-family:var(--mono);font-size:12.5px;line-height:1.6;padding:18px 20px;overflow-x:auto;margin:18px 0}
+pre .c{color:#7E9198} pre .k{color:#8FC6D6} pre .s{color:#D9A05B}
+
+ul,ol{margin:0 0 1.1em;padding-left:22px}
+li{margin-bottom:.45em}
+
+.strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);margin:24px 0;background:#fff}
+.strip div{padding:14px 16px;border-right:1px solid var(--rule)}
+.strip div:last-child{border-right:none}
+.strip .v{font-family:var(--mono);font-size:23px;font-weight:600;display:block;margin-top:3px}
+.strip .r{color:var(--stamp)} .strip .g{color:var(--sea)}
+
+.hero{border:2px solid var(--ink);background:#fff;padding:26px 28px;margin:26px 0}
+.hero .big{font-family:var(--mono);font-size:46px;font-weight:600;line-height:1;color:var(--stamp);display:block}
+.hero .cap{font-family:var(--display);font-size:15px;margin-top:8px;color:var(--ink)}
+.hero .src{font-family:var(--display);font-size:11.5px;color:var(--ink-soft);margin-top:6px}
+
+.srclist{font-size:14.5px;line-height:1.5}
+.srclist li{margin-bottom:.7em}
+.srclist a{word-break:break-all;font-family:var(--mono);font-size:11.5px}
+
+@media(max-width:760px){
+  .wrap{padding:0 18px 80px}
+  .masthead h1{font-size:34px}
+  .fields,.strip{grid-template-columns:1fr 1fr}
+  .field,.strip div{border-bottom:1px solid var(--rule)}
+  .toc ol{columns:1}
+  .gloss .row,.leak{grid-template-columns:1fr;gap:8px}
+  .stamp{max-width:118px}
+  table{font-size:13px} td,th{padding:8px 7px}
+  .hero .big{font-size:34px}
+}
+@media print{body{background:#fff} figure,.leak,.note,.warn,.hero{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <h1>Persistent Fleet</h1>
+  <div class="sub">Autonomous demurrage &amp; detention defence, built on durable agents</div>
+  <div class="fields">
+    <div class="field"><span class="label">Document</span><span class="val">PF-002 · Rev B</span></div>
+    <div class="field"><span class="label">Category</span><span class="val">Ocean freight cost</span></div>
+    <div class="field"><span class="label">Stack</span><span class="val">Temporal + agentic AI</span></div>
+    <div class="field"><span class="label">Rates current</span><span class="val">2026, US West Coast</span></div>
+  </div>
+</header>
+
+<div class="toc">
+  <span class="label">Contents</span>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>Executive summary</a></li>
+    <li><a href="#s2"><span class="n">02</span>What we are solving</a></li>
+    <li><a href="#s3"><span class="n">03</span>Glossary of terms</a></li>
+    <li><a href="#s4"><span class="n">04</span>How the money works</a></li>
+    <li><a href="#s5"><span class="n">05</span>The regulatory lever</a></li>
+    <li><a href="#s6"><span class="n">06</span>The 45 days today</a></li>
+    <li><a href="#s7"><span class="n">07</span>The same 45 days with agents</a></li>
+    <li><a href="#s8"><span class="n">08</span>Worked example with real rates</a></li>
+    <li><a href="#s9"><span class="n">09</span>Every place money leaks</a></li>
+    <li><a href="#s10"><span class="n">10</span>Leak → agent → Temporal</a></li>
+    <li><a href="#s11"><span class="n">11</span>How the agents work</a></li>
+    <li><a href="#s12"><span class="n">12</span>How Temporal works</a></li>
+    <li><a href="#s13"><span class="n">13</span>The workflow spine</a></li>
+    <li><a href="#s14"><span class="n">14</span>System architecture</a></li>
+    <li><a href="#s15"><span class="n">15</span>Event taxonomy</a></li>
+    <li><a href="#s16"><span class="n">16</span>Guardrails</a></li>
+    <li><a href="#s17"><span class="n">17</span>Impact model</a></li>
+    <li><a href="#s18"><span class="n">18</span>Proving the value</a></li>
+    <li><a href="#s19"><span class="n">19</span>Build plan</a></li>
+    <li><a href="#s20"><span class="n">20</span>Demo script</a></li>
+    <li><a href="#s21"><span class="n">21</span>Questions judges will ask</a></li>
+    <li><a href="#s22"><span class="n">22</span>Beyond the hackathon</a></li>
+    <li><a href="#s23"><span class="n">23</span>Sources</a></li>
+  </ol>
+</div>
+
+<section id="s1">
+  <div class="sec-head"><span class="idx">01</span><h2>Executive summary</h2></div>
+
+  <p class="lede">Every shipping container has a lifespan of weeks. Every AI agent has a lifespan of one conversation. That mismatch is why billions of dollars in avoidable penalty fees get paid every year — and it is exactly the mismatch Temporal closes.</p>
+
+  <div class="hero">
+    <span class="big">$15.4 billion</span>
+    <div class="cap">Demurrage and detention collected by just nine ocean carriers in US trades, April 2020 to March 2025.</div>
+    <div class="src">Source: Federal Maritime Commission quarterly data collection [1]</div>
+  </div>
+
+  <p>That is nine carriers, one country, five years. It is not a pandemic artefact either — the FMC's own index shows amounts billed and collected peaking <em>again</em> in Q4 2024, some 85% above the Q2 2020 baseline. [1]</p>
+
+  <p>When a container arrives at a port, two clocks start. One counts the days the box sits in the terminal (<strong>demurrage</strong>); the other counts the days you keep the carrier's equipment after collecting it (<strong>detention</strong>). Overrun either and the charges escalate daily. At Los Angeles and Long Beach in 2026, free time has compressed to two to four days at many terminals, and tiered rates run roughly $200 per day at the first tier up to $500 per day at the worst. [5]</p>
+
+  <p>Here is the number that makes this a business, not a complaint. Over 2020–2022 those nine carriers <strong>billed about $8.9 billion and collected about $6.9 billion.</strong> [4] Roughly a fifth of what gets billed never gets paid — because somebody disputed it and won. The disputes work. Almost nobody makes them.</p>
+
+  <p>They don't, for one reason: the job requires <em>continuous attention across a 24-to-60 day window</em>, joining a contract PDF to a live event stream to an invoice that arrives five weeks later, inside a 30-day dispute window. Humans cannot hold ten thousand of those in working memory at once. Neither can a chatbot, which forgets everything the moment the session ends.</p>
+
+  <p><strong>Persistent Fleet gives every container its own agent, and gives that agent a lifespan that matches the container's.</strong> Built on Temporal, each agent sleeps for days, wakes on real-world events, prices its options, acts within a bounded mandate, escalates to a human when spend crosses a threshold, and — after the box is long gone — assembles and prosecutes the dispute inside the regulatory deadline. It survives crashes, deploys and restarts, because the workflow <em>is</em> the memory.</p>
+
+  <div class="strip">
+    <div><span class="label">Worked example, billed</span><span class="v r">$5,585</span></div>
+    <div><span class="label">Strongly defensible</span><span class="v g">$3,150</span></div>
+    <div><span class="label">Preventable outright</span><span class="v g">$1,485</span></div>
+    <div><span class="label">Typically recovered today</span><span class="v r">$0</span></div>
+  </div>
+
+  <p>Those figures come from section 08 — one ordinary 40-foot container through Los Angeles in March 2026, priced at published 2026 rates. Nothing exotic happens to it. That is the point.</p>
+</section>
+
+<section id="s2">
+  <div class="sec-head"><span class="idx">02</span><h2>What we are solving</h2></div>
+
+  <h3>The problem in one paragraph</h3>
+  <p>Importers are billed penalty charges for container delays they frequently did not cause and could not have prevented. A large share of those charges are either avoidable with three days' notice or disputable under US federal rules. Almost none are avoided or disputed, because doing so requires one continuous thread of attention stretching across six weeks and four disconnected systems — and no such thread exists in any importer's operation today.</p>
+
+  <h3>Why it is not a data problem</h3>
+  <p>Every fact needed to win already exists somewhere. The free time is in the service contract. The discharge time is in an EDI 315. The availability time is in a terminal portal. The exam window is in a customs status feed. The return restriction is in an advisory email. The charge is on an invoice.</p>
+  <p><strong>It is an attention problem.</strong> Nothing joins those six things together, at the right moment, for the right container, and holds them until the invoice lands five weeks later.</p>
+
+  <h3>Why agentic AI</h3>
+  <p>The work is judgement-heavy on messy inputs. Reading free-time clauses out of a contract PDF. Deciding whether a carrier advisory applies to <em>this</em> container at <em>this</em> depot. Weighing a $340 expedite against a $1,485 risk. Drafting a dispute that cites its own evidence and matches the specific regulatory defect in the invoice. None of these are rules you write once.</p>
+
+  <h3>Why Temporal, specifically</h3>
+  <p>Apply the honest test: <em>could you build this with a cron job and a queue?</em> No — and not marginally. The process sleeps for days at a time and must survive deploys. It parks indefinitely waiting for a human to approve a spend in Slack. It takes real actions in real carrier systems that must be undone when customs intervenes an hour later. It must produce a permanent, replayable record of what the agent knew and when it knew it — because under the FMC rules, <em>that record is the dispute evidence.</em></p>
+  <p>Each of those is a distributed-systems project on its own. Temporal makes them ordinary.</p>
+
+  <div class="note">
+    <span class="label">The framing to lead with</span>
+    <p>Today's AI agents are session-shaped: they wake, think, and die. The physical world is not session-shaped — a container spends 45 days in it. Temporal lets us give every container an agent that lives as long as the container's journey does.</p>
+  </div>
+</section>
+
+<section id="s3">
+  <div class="sec-head"><span class="idx">03</span><h2>Glossary of terms</h2></div>
+
+  <p>Everything below appears later in the document. The three charges in the first block are the ones people most often confuse, and that confusion is itself a source of loss.</p>
+
+  <h3>The charges</h3>
+  <div class="gloss">
+    <div class="row"><div class="term">Demurrage</div><div class="def">Charged when a <em>full</em> container sits inside the terminal past its free time. You are being penalised for occupying yard space. On imports the clock runs from discharge (or from when the box is made available) until you collect it. Mental model: <strong>your cargo in their yard</strong>.</div></div>
+    <div class="row"><div class="term">Detention<span class="alt">a.k.a. per diem</span></div><div class="def">Charged by the carrier when you hold their container <em>outside</em> the terminal past its free time — from gate-out until you return the empty to the designated depot. Mental model: <strong>their box in your yard</strong>.</div></div>
+    <div class="row"><div class="term">Terminal storage</div><div class="def">Charged by the <em>terminal operator</em> — a different company from the carrier — for the same yard time demurrage covers. Its own free-time allowance, its own counting rules. A container can legitimately incur demurrage and storage on the same day.</div></div>
+    <div class="row"><div class="term">Chassis per diem</div><div class="def">A separate daily charge for the wheeled frame the container sits on, typically $35–$50 per day. [5] Forgotten in almost every cost estimate, and it accrues right through an empty-return restriction.</div></div>
+  </div>
+
+  <h3>The clock</h3>
+  <div class="gloss">
+    <div class="row"><div class="term">Free time</div><div class="def">Days granted before charges begin. Set in the service contract for demurrage and detention, in the terminal tariff for storage. Frequently different for each, and different per port.</div></div>
+    <div class="row"><div class="term">Last free day<span class="alt">LFD</span></div><div class="def">The final day before charges accrue. The single most important date in the process, and the one most often computed wrongly.</div></div>
+    <div class="row"><div class="term">Tier table</div><div class="def">The escalating rate schedule. Escalation is why small delays produce disproportionate bills — the last two days of a delay can cost more than the first five.</div></div>
+    <div class="row"><div class="term">Effective LFD</div><div class="def">Our term, not the industry's. The last free day adjusted for days the container was not actually available for collection. The gap between nominal and effective LFD is pure recoverable money.</div></div>
+  </div>
+
+  <h3>Events and documents</h3>
+  <div class="gloss">
+    <div class="row"><div class="term">Discharge</div><div class="def">The container is lifted off the vessel. Nominally starts the demurrage clock.</div></div>
+    <div class="row"><div class="term">Availability<span class="alt">grounded / appointable</span></div><div class="def">The moment the box can actually be collected — grounded, released, and bookable. Often one to three days after discharge.</div></div>
+    <div class="row"><div class="term">Gate-out</div><div class="def">The container leaves the terminal. Stops demurrage and starts detention in the same instant.</div></div>
+    <div class="row"><div class="term">Empty return</div><div class="def">The emptied box is <em>accepted</em> back at the depot. Arriving is not enough — a turned-away trucker does not stop the clock.</div></div>
+    <div class="row"><div class="term">CET exam<span class="alt">A-TCET, intensive</span></div><div class="def">A Contraband Enforcement Team examination. The container is moved to a Centralised Examination Station and physically unloaded. Duration commonly runs one to two weeks or more, and the importer bears the cost. [8][9]</div></div>
+    <div class="row"><div class="term">VACIS exam</div><div class="def">A non-intrusive X-ray or gamma scan of the whole container. The most common ocean exam type and usually the quickest to clear. [9]</div></div>
+    <div class="row"><div class="term">Empty return restriction</div><div class="def">The carrier announces it will not accept empties at a given depot. Detention typically keeps accruing anyway.</div></div>
+    <div class="row"><div class="term">Equipment interchange receipt<span class="alt">EIR</span></div><div class="def">The document recording custody transfer at a gate. Primary dispute evidence — it timestamps exactly when the box changed hands.</div></div>
+    <div class="row"><div class="term">EDI 315 / 322</div><div class="def">Standard electronic messages carrying container status events (315) and terminal operations events (322). The main machine-readable feed.</div></div>
+  </div>
+
+  <h3>Parties and operations</h3>
+  <div class="gloss">
+    <div class="row"><div class="term">Carrier<span class="alt">VOCC / steamship line</span></div><div class="def">Owns the container and the contract with you. Bills demurrage and detention.</div></div>
+    <div class="row"><div class="term">Terminal operator<span class="alt">MTO</span></div><div class="def">Runs the port facility. Owns the yard and the appointment system. Bills storage.</div></div>
+    <div class="row"><div class="term">NVOCC / forwarder</div><div class="def">An intermediary that contracts with the carrier and re-bills you. Sits in the middle of the dispute chain and gets its own timing rules under the FMC regime.</div></div>
+    <div class="row"><div class="term">Consignee</div><div class="def">The party receiving the cargo. Usually the one who ends up paying.</div></div>
+    <div class="row"><div class="term">Drayage</div><div class="def">Short-haul trucking between terminal and warehouse or depot.</div></div>
+    <div class="row"><div class="term">Merchant haulage</div><div class="def">You arrange your own trucking and transact with the terminal directly, so storage charges land on you separately.</div></div>
+    <div class="row"><div class="term">Carrier haulage</div><div class="def">The carrier arranges the inland move; terminal charges reach you consolidated.</div></div>
+    <div class="row"><div class="term">Off-dock yard</div><div class="def">A depot outside the terminal. Moving a box there stops the terminal clock at the cost of an extra drayage leg later.</div></div>
+  </div>
+
+  <h3>Technical terms</h3>
+  <div class="gloss">
+    <div class="row"><div class="term">Workflow</div><div class="def">In Temporal, a durable function whose entire execution is recorded and replayable. Survives process crashes and redeploys.</div></div>
+    <div class="row"><div class="term">Activity</div><div class="def">A unit of work called by a workflow. Anything non-deterministic — network calls, LLM calls, clock reads — must live here.</div></div>
+    <div class="row"><div class="term">Signal</div><div class="def">An asynchronous message delivered into a running workflow from outside. How real-world events reach a sleeping agent.</div></div>
+    <div class="row"><div class="term">Query</div><div class="def">A synchronous, side-effect-free read of a running workflow's state. How the dashboard sees what each agent is thinking.</div></div>
+    <div class="row"><div class="term">Saga</div><div class="def">A pattern where each completed step has a compensating action that undoes it if a later step fails.</div></div>
+    <div class="row"><div class="term">Entity workflow</div><div class="def">One long-lived workflow instance per real-world object — here, one per container. The architectural centrepiece.</div></div>
+    <div class="row"><div class="term">Determinism</div><div class="def">The requirement that workflow code produce identical results on replay. It is why the agent's reasoning lives in activities and never in the workflow itself.</div></div>
+  </div>
+</section>
+
+<section id="s4">
+  <div class="sec-head"><span class="idx">04</span><h2>How the money works</h2></div>
+
+  <p>Real published rates, current for 2026 where available. Everything in this section is sourced; see section 23.</p>
+
+  <h3>Why the charge exists at all</h3>
+  <p>A container only earns money while it is moving. A box making eight round trips a year earns twice what a box making four earns, off the same purchase price. Every idle day is a day that asset generates nothing — and it is idle in a terminal with finite capacity, slowing every other move around it. Escalating penalties are how the industry prices that congestion.</p>
+  <p>But note that pure cost recovery does not escalate. Tiered escalation is a <em>price signal</em>, which is why the same mechanism punishes delays you could not possibly control.</p>
+
+  <h3>Why the carrier bills you for a yard it does not own</h3>
+  <p>Because you have no contract with the terminal — you have a bill of lading with the carrier, and the carrier has a terminal services agreement with the terminal. Money flows along contracts, not along real estate. The terminal bills the carrier for overstay; the carrier bills you, at a marked-up and escalating rate that also prices its own equipment downtime.</p>
+  <p>Under <strong>merchant haulage</strong> you also transact with the terminal directly, so its storage tariff lands on you separately. That is why two invoices for overlapping days from two companies is normal — and why genuine double-billing hides inside a legitimate-looking overlap.</p>
+
+  <h3>Typical 2026 rate card — US West Coast</h3>
+  <table>
+    <tr><th>Charge</th><th>Free time</th><th>Rate structure</th><th class="mono">Source</th></tr>
+    <tr><td><strong>Demurrage</strong></td><td>2–4 days at many LA/LB terminals in 2026; 3–7 days more broadly</td><td>Tiered. Roughly $150–$200/day days 1–4, $200–$300/day days 5–7, $300–$500/day day 8+</td><td class="mono">[5][6][7]</td></tr>
+    <tr><td><strong>Detention / per diem</strong></td><td>Commonly 5 days from gate-out</td><td>Roughly $125–$175/day at the first tier, escalating similarly</td><td class="mono">[10]</td></tr>
+    <tr><td><strong>Terminal storage</strong></td><td>Terminal-specific, often shorter than the carrier's</td><td>Tiered, published per terminal; reefers substantially higher</td><td class="mono">[11]</td></tr>
+    <tr><td><strong>Chassis per diem</strong></td><td>Usually none</td><td>$35–$50/day</td><td class="mono">[5]</td></tr>
+    <tr><td><strong>PierPass TMF</strong></td><td>—</td><td>$77.56 per FEU (from 1 Aug 2025)</td><td class="mono">[12]</td></tr>
+    <tr><td><strong>Clean Truck Fund</strong></td><td>—</td><td>$20 per larger-than-TEU container, conventional truck</td><td class="mono">[12]</td></tr>
+  </table>
+
+  <h3>What that adds up to</h3>
+  <p>Container xChange's benchmark measures accumulated D&amp;D two weeks after discharge. In 2023 the six most expensive US ports — New York, Oakland, Los Angeles, Savannah, Long Beach and Houston — averaged about <strong>$2,008 per container</strong> at that fourteen-day mark, down from roughly $2,692 in 2022. [2][3] The same benchmark put average detention alone at about $123 seven days after gate-out and about $537 at fourteen days. [13]</p>
+  <p>For scale on the other axis, one industry estimate puts the global cost of D&amp;D at roughly $22 billion a year across all trades. [14] Treat that as an estimate; the FMC's $15.4 billion is a hard number and covers only nine carriers in US trades. [1]</p>
+
+  <div class="warn">
+    <span class="label">The compounding trap</span>
+    <p>Because rates are tiered, delay cost is convex. Two extra days at the start of a delay might cost $400. The same two days at the end of a nine-day delay cost $900 or more. This is why a $340 intervention on day three routinely beats a $1,500 charge on day nine — and why the intervention has to happen <em>early</em>, when nobody is paying attention yet.</p>
+  </div>
+</section>
+
+<section id="s5">
+  <div class="sec-head"><span class="idx">05</span><h2>The regulatory lever</h2></div>
+
+  <p class="lede">This section is what makes the project a product rather than a dashboard. Since May 2024, US federal rules give importers a concrete, machine-checkable basis for refusing to pay — and almost nobody uses it, because checking requires evidence nobody kept.</p>
+
+  <p>The Ocean Shipping Reform Act of 2022 directed the Federal Maritime Commission to regulate D&amp;D billing. The resulting final rule, <strong>46 CFR Part 541</strong>, took effect on 28 May 2024. [15][16] In September 2025 the D.C. Circuit set aside exactly one section — 541.4, which had governed <em>who</em> may be invoiced — leaving the invoice-contents requirements, the issuance deadline and the dispute windows fully in force. [17]</p>
+
+  <h3>The four rules that matter</h3>
+
+  <h4>1. Invoice within 30 days, or it is not payable</h4>
+  <p>A billing party must issue a D&amp;D invoice within 30 calendar days of the date the charge was last incurred. An NVOCC passing a charge through gets 30 days from the date it received the upstream invoice. <strong>Miss the deadline and the billed party has no obligation to pay.</strong> [15][16][18]</p>
+
+  <h4>2. Missing required content voids the charge</h4>
+  <p>Section 541.6 sets out five categories of mandatory invoice content — identifying, timing, rate, dispute, and certification information — amounting to roughly twenty numbered items depending on whether the shipment is an import or export. [19] Under 541.5, <strong>omitting any applicable required item eliminates the obligation to pay that charge.</strong> [20] This makes the first move in any dispute a line-by-line read of the invoice, which is exactly the kind of tedious, high-volume, rule-bound checking an agent does better than a person.</p>
+
+  <h4>3. The certification clause</h4>
+  <p>Every compliant US D&amp;D invoice now carries the billing party's own written statement that the charges are consistent with FMC rules <em>and that its own performance did not cause or contribute to the charge.</em> [19][21]</p>
+  <p>Read that against our worked example. The terminal had no appointment slots for three days. The carrier refused the empty for six. In both cases the billing party's performance is precisely what caused the charge — and the billing party has certified in writing that it did not. That is not a sympathy argument; it is a documented contradiction, and it is the single strongest lever the Case Builder has.</p>
+
+  <h4>4. Thirty days to dispute, thirty days to resolve</h4>
+  <p>The billed party gets at least 30 calendar days from invoice issuance to request mitigation, refund or waiver. If a timely request is made, the billing party must attempt to resolve it within 30 days unless both agree otherwise. A Charge Complaint may be filed with the FMC at any point in the process. [15][18][22]</p>
+
+  <div class="note">
+    <span class="label">Why this changes the design</span>
+    <p>The dispute is winnable on documented facts and a deadline, not on relationship or negotiation skill. That makes it automatable — and it means the binding constraint is <em>evidence captured contemporaneously</em>, which is exactly what a durable agent produces as a side effect of simply running.</p>
+  </div>
+
+  <h3>The number that proves disputes work</h3>
+  <p>Over 2020–2022 the nine largest carriers in US trades billed approximately <strong>$8.9 billion</strong> in D&amp;D and collected approximately <strong>$6.9 billion</strong>. [4] Roughly one dollar in five was billed and never collected — waived, mitigated or successfully disputed. The FMC's ongoing index tracks "waived" as its own series alongside billed and collected. [1]</p>
+  <p>So the mechanism works. The constraint is not whether carriers concede — they demonstrably do — it is that hardly anyone asks, because asking costs more staff time than the charge.</p>
+</section>
+
+<section id="s6">
+  <div class="sec-head"><span class="idx">06</span><h2>The 45 days today</h2></div>
+
+  <p>This is the "before" picture, told slowly. Our container is a 40-foot high cube of garden furniture, Ningbo to Los Angeles, discharging at Pier 400 and delivering to a warehouse in Fontana. The importer is a mid-size retailer moving roughly 3,000 containers a year — big enough to have an ops team, small enough that the team is stretched.</p>
+
+  <h3>Days −7 to 0 — before arrival</h3>
+  <p>The arrival notice lands. Customs entry is filed in advance. The drayage carrier is on notice. Everything is fine.</p>
+  <p>The service contract that governs the next six weeks was signed months ago. It grants four free days at this port. It is a PDF in a shared drive. Nobody has opened it since signature, and nobody will open it again until after the invoice arrives.</p>
+
+  <h3>Day 0 — discharge</h3>
+  <p>The box comes off the vessel at 06:00. The demurrage clock starts. Nominal last free day: day 4.</p>
+  <p>Nobody records this date anywhere a system can act on. The ops team knows the container "arrived" and marks it as such.</p>
+
+  <h3>Days 0–2 — the invisible loss</h3>
+  <p>The container is in a stack, ungrounded and not appointable. No trucker could collect it if they tried. Two of the four free days are consumed by the terminal's handling before the importer has any ability to act.</p>
+  <p>This is recorded in the terminal portal. Nobody looks at the terminal portal on day 1.</p>
+
+  <h3>Day 1 — customs hold</h3>
+  <p>A CET exam hold is placed. The container is routed to a Centralised Examination Station. It is now legally and physically out of reach, and the importer pays for the privilege. [8][9]</p>
+  <p>The broker emails to say there's an exam. The email goes into a thread. Nobody logs the timestamp.</p>
+
+  <h3>Day 5 — the clock starts, unnoticed</h3>
+  <p>The last free day has passed. Demurrage now accrues daily on a container nobody is permitted to touch. Terminal storage, which had a shorter allowance, started accruing on day 4.</p>
+  <p>There is no alert. There is no dashboard. There is no person whose job it is to notice.</p>
+
+  <h3>Days 5–9 — the exam</h3>
+  <p>The exam runs nine days end to end, well inside the normal range. [9] Charges compound through two tier steps. Nobody can do anything, and — critically — <strong>nobody captures the fact that nobody could do anything.</strong></p>
+
+  <h3>Days 9–12 — no appointment slots</h3>
+  <p>Customs releases. The drayage carrier tries to book a pickup and fails three times: the terminal's appointment system has no slots. A dispatcher grumbles in Slack. He does not screenshot the empty grid, because it does not occur to him that in five weeks that screenshot will be worth $1,225.</p>
+  <p>These are the most expensive days of the whole delay, because the tier ladder is at its top.</p>
+
+  <h3>Day 12 — gate-out</h3>
+  <p>The box finally leaves. Demurrage stops at eight billed days. Detention starts in the same instant. The ops team mentally files this container as done.</p>
+
+  <h3>Day 14 — delivered and stripped</h3>
+  <p>Cargo is unloaded at Fontana. From the consignee's point of view, finished. The empty sits on a chassis in the trucker's yard. Nobody books a return appointment, because nobody is tracking the second clock.</p>
+
+  <h3>Days 16–21 — the empty return restriction</h3>
+  <p>The carrier issues an advisory: it will not accept empties at that depot. The advisory goes to a shared inbox. The trucker drives out on day 17, is turned away, and drives back. Detention accrues. Chassis per diem accrues.</p>
+  <p>Had anyone returned the box on day 14 or 15, before the restriction began, this entire second charge would not exist.</p>
+
+  <h3>Day 23 — empty accepted</h3>
+  <p>Six billed detention days, eight billed chassis days.</p>
+
+  <h3>Days 35–42 — the invoices</h3>
+  <p>Three invoices arrive from two companies. Total $5,585. The ops team has handled roughly four hundred other containers since this one. Reconstructing what happened would take half a day, and the dispatcher who could confirm the appointment system was empty has moved to another account.</p>
+  <p>The regulatory clock is now running: 30 days to dispute. Nobody starts it.</p>
+
+  <h3>Day 45 — payment</h3>
+  <p>Finance pays. Not because anyone decided the charge was fair, but because the invoice is below the review threshold, and the review threshold exists because disputing costs more than paying.</p>
+
+  <div class="warn">
+    <span class="label">The quiet variant</span>
+    <p>On some lanes the carrier holds cargo release pending settlement. The importer pays to free the goods, intending to dispute afterwards. Nothing captures that intent, no process carries it forward, and the protest quietly becomes acceptance.</p>
+  </div>
+</section>
+
+<section id="s7">
+  <div class="sec-head"><span class="idx">07</span><h2>The same 45 days with agents</h2></div>
+
+  <p>Same container, same exam, same congested terminal, same carrier advisory. Nothing about the world changes. Only the attention does.</p>
+
+  <table class="ba">
+    <tr><th style="width:78px">Day</th><th style="width:44%">Today</th><th>With Persistent Fleet</th></tr>
+    <tr>
+      <td>−7</td>
+      <td>Arrival notice filed away. Contract terms stay in a PDF.</td>
+      <td>Workflow pre-armed. Watcher extracts free time, tier table and weekend rules from the contract into structured state the agent holds for the whole journey.</td>
+    </tr>
+    <tr>
+      <td>0</td>
+      <td>Container marked "arrived". No date computed.</td>
+      <td>Demurrage clock starts. Nominal LFD computed and stored. Agent sleeps.</td>
+    </tr>
+    <tr>
+      <td>0–2</td>
+      <td>Box ungrounded, unappointable. Two free days lost invisibly.</td>
+      <td>Availability polled from discharge. Ungrounded window captured with terminal timestamps. <strong>Effective LFD shifted two days.</strong> Evidence cited and stored.</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Exam email lands in a thread.</td>
+      <td>Hold-placed signal wakes the sleeping workflow. Timestamp, hold type and source document recorded. Intervention suppressed — the agent knows spending money now is pointless.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>—</td>
+      <td>Agent projects the charge, opens a claim window, and notifies ops with a forecast rather than a surprise.</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>Charges begin silently. No alert exists.</td>
+      <td>LFD−72h, −48h and −24h checkpoints already fired. Agent has priced the options at each and logged its counterfactual.</td>
+    </tr>
+    <tr>
+      <td>5–9</td>
+      <td>Exam runs. Nobody records that nobody could act.</td>
+      <td>Exam window recorded day by day against CES documents — the exact evidence needed for the dispute, captured while it is true.</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>Broker mentions release in passing.</td>
+      <td>Hold-released signal fires. Agent reassesses immediately and moves to top priority: this container is now in the top tier.</td>
+    </tr>
+    <tr>
+      <td>9–12</td>
+      <td>Three failed appointment attempts. Nothing recorded.</td>
+      <td>Continuous slot scanning. <strong>Every failure written to history with a timestamp</strong> — the strongest single piece of dispute evidence, and free as a by-product of trying.</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td>Gate-out. Container considered done.</td>
+      <td>Gate-out ends the demurrage arc and spawns the detention child workflow. <strong>The second clock is now watched.</strong></td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td>—</td>
+      <td>Agent books the empty return appointment for day 15, before any restriction exists, and confirms a slot.</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>Cargo stripped. Empty parked and forgotten.</td>
+      <td>Cargo stripped. Return already scheduled.</td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td>—</td>
+      <td><strong>Empty returned and accepted. Detention never accrues. $1,485 does not happen.</strong></td>
+    </tr>
+    <tr>
+      <td>16–21</td>
+      <td>Advisory unread. Trucker turned away. Detention and chassis accrue for eight days.</td>
+      <td>Advisory ingested and matched — but the box is already back. Recorded as a near miss and fed to the learning store as a prior for this depot.</td>
+    </tr>
+    <tr>
+      <td>23</td>
+      <td>Empty finally accepted.</td>
+      <td>Container closed eight days earlier.</td>
+    </tr>
+    <tr>
+      <td>25</td>
+      <td>Nothing.</td>
+      <td>Case pre-assembled. Chronology, citations and draft dispute ready <em>before the invoice exists</em>.</td>
+    </tr>
+    <tr>
+      <td>35–42</td>
+      <td>Invoices arrive. Story is unreconstructable.</td>
+      <td>Auditor recomputes from first principles and runs the Part 541 checklist: issuance deadline, required content, tier application, weekend counting, double-billing, certification clause.</td>
+    </tr>
+    <tr>
+      <td>36</td>
+      <td>Dispute window starts. Nobody notices.</td>
+      <td>Dispute filed within 24 hours, evidence attached. Durable follow-up cadence begins.</td>
+    </tr>
+    <tr>
+      <td>45</td>
+      <td><strong>$5,585 paid in full.</strong></td>
+      <td><strong>$1,485 prevented. $3,150 contested with documented evidence.</strong> Dispute workflow continues for weeks; the container is long gone and the agent is still working.</td>
+    </tr>
+  </table>
+
+  <p>Note what did <em>not</em> change. The agent did not clear customs faster, conjure appointment slots, or talk the carrier out of a restriction. It changed exactly three things: it knew the deadline, it acted on the one leg that was actually controllable, and it captured evidence while the evidence still existed.</p>
+
+  <figure>
+  <svg viewBox="0 0 840 214" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two bars comparing outcomes. Today the full $5,585 is paid. With agents, $1,485 is prevented, $2,205 is recovered through dispute, and about $1,895 remains paid.">
+    <text x="20" y="36" font-family="Archivo,sans-serif" font-size="13" font-weight="600" fill="#17242C">Today</text>
+    <rect x="140" y="18" width="660" height="42" fill="#F5E6E1" stroke="#A83B22" stroke-width="1"/>
+    <text x="470" y="43" font-family="IBM Plex Mono,monospace" font-size="14" font-weight="600" fill="#A83B22" text-anchor="middle">$5,585 paid in full</text>
+
+    <text x="20" y="116" font-family="Archivo,sans-serif" font-size="13" font-weight="600" fill="#17242C">With agents</text>
+    <rect x="140" y="98" width="175" height="42" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="1" stroke-dasharray="5 3"/>
+    <text x="227" y="123" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="600" fill="#1D5B6E" text-anchor="middle">$1,485</text>
+    <rect x="315" y="98" width="261" height="42" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="1"/>
+    <text x="445" y="123" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="600" fill="#1D5B6E" text-anchor="middle">$2,205</text>
+    <rect x="576" y="98" width="224" height="42" fill="#F5E6E1" stroke="#A83B22" stroke-width="1"/>
+    <text x="688" y="123" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="600" fill="#A83B22" text-anchor="middle">$1,895</text>
+
+    <rect x="140" y="166" width="12" height="12" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="1" stroke-dasharray="4 2"/>
+    <text x="160" y="176" font-family="Archivo,sans-serif" font-size="12" fill="#4A5A62">prevented — never billed</text>
+    <rect x="330" y="166" width="12" height="12" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="1"/>
+    <text x="350" y="176" font-family="Archivo,sans-serif" font-size="12" fill="#4A5A62">recovered — disputed and won</text>
+    <rect x="560" y="166" width="12" height="12" fill="#F5E6E1" stroke="#A83B22" stroke-width="1"/>
+    <text x="580" y="176" font-family="Archivo,sans-serif" font-size="12" fill="#4A5A62">paid — legitimately owed or lost</text>
+  </svg>
+  <figcaption><b>Figure 1.</b> One container. Recovery assumes a 70% win rate on the strongly documented claim; the prevented portion carries no dispute risk at all, which is why prevention is worth more per dollar than recovery.</figcaption>
+  </figure>
+</section>
+
+<section id="s8">
+  <div class="sec-head"><span class="idx">08</span><h2>Worked example with real rates</h2></div>
+
+  <p>Container <code>MSKU 748192-0</code>, 40' high cube, garden furniture, Ningbo → Los Angeles, discharge at Pier 400, delivery to Fontana, CA. March 2026. Rates are illustrative but drawn from the published 2026 ranges in section 04.</p>
+
+  <h3>The terms</h3>
+  <table>
+    <tr><th>Clock</th><th>Billed by</th><th class="mono">Free time</th><th>Tier table used here</th></tr>
+    <tr><td>Demurrage</td><td>Carrier</td><td class="mono">4 days</td><td>$200/day (1–3), $325/day (4–6), $450/day (7+)</td></tr>
+    <tr><td>Terminal storage</td><td>Terminal operator</td><td class="mono">3 days</td><td>$125/day (1–5), $250/day (6+)</td></tr>
+    <tr><td>Detention</td><td>Carrier</td><td class="mono">5 days</td><td>$150/day (1–3), $225/day (4+)</td></tr>
+    <tr><td>Chassis per diem</td><td>Chassis pool</td><td class="mono">none</td><td>$45/day flat</td></tr>
+  </table>
+
+  <p>Three allowances, three counting rules, three documents. Note that the terminal's free time is shorter than the carrier's — so storage starts biting a day before demurrage does, which almost nobody anticipates.</p>
+
+  <h3>The event log</h3>
+  <table>
+    <tr><th class="mono">Date</th><th>Event</th><th>Consequence</th></tr>
+    <tr><td class="mono">Mar 3, 06:00</td><td>Vessel discharges</td><td>Demurrage clock starts. Nominal LFD = Mar 7</td></tr>
+    <tr><td class="mono">Mar 3–5</td><td>Container ungrounded, not appointable</td><td>Two of four free days consumed before anyone could act</td></tr>
+    <tr><td class="mono">Mar 4</td><td>CET exam hold placed</td><td>Box routed to CES; legally and physically out of reach</td></tr>
+    <tr><td class="mono">Mar 6</td><td>Terminal storage free time expires</td><td>Storage begins accruing — a day before demurrage</td></tr>
+    <tr><td class="mono">Mar 7</td><td>Demurrage last free day</td><td>Charges begin Mar 8 on an immovable container</td></tr>
+    <tr><td class="mono">Mar 12</td><td>Customs releases</td><td>Nine-day exam, all of it billed</td></tr>
+    <tr><td class="mono">Mar 13–15</td><td>Three failed appointment attempts</td><td>Terminal has no slots. Top-tier days — the most expensive of the delay</td></tr>
+    <tr><td class="mono">Mar 15</td><td>Gate-out</td><td>Demurrage stops at 8 days. Detention starts. Empty due Mar 20</td></tr>
+    <tr><td class="mono">Mar 17</td><td>Cargo delivered and stripped</td><td>Consignee considers the container finished</td></tr>
+    <tr><td class="mono">Mar 19–24</td><td>Carrier empty return restriction</td><td>Trucker turned away; empty parked on a chassis in his yard</td></tr>
+    <tr><td class="mono">Mar 26</td><td>Empty accepted</td><td>Detention stops at 6 days; chassis at 8</td></tr>
+  </table>
+
+  <h3>The clocks</h3>
+
+  <figure>
+  <svg viewBox="0 0 840 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three billing clocks across a 24 day container journey at Los Angeles, showing free and billed periods for demurrage, terminal storage and detention, with leak markers.">
+    <text x="60" y="20" font-family="Archivo,sans-serif" font-size="11" font-weight="600" letter-spacing="1.6" fill="#4A5A62">DEMURRAGE — CARRIER · FULL BOX IN TERMINAL</text>
+    <rect x="60" y="30" width="129" height="32" fill="#D8DCD8" stroke="#9AA5A0" stroke-width="1"/>
+    <text x="124" y="50" font-family="IBM Plex Mono,monospace" font-size="12" fill="#4A5A62" text-anchor="middle">4 free</text>
+    <rect x="189" y="30" width="257" height="32" fill="#F5E6E1" stroke="#A83B22" stroke-width="1"/>
+    <text x="330" y="50" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="500" fill="#A83B22" text-anchor="middle">8 days billed · $2,475</text>
+    <circle cx="80" cy="46" r="9" fill="#A83B22"/><text x="80" y="50" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600" fill="#F5E6E1" text-anchor="middle">1</text>
+    <circle cx="212" cy="46" r="9" fill="#A83B22"/><text x="212" y="50" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600" fill="#F5E6E1" text-anchor="middle">2</text>
+    <circle cx="425" cy="46" r="9" fill="#A83B22"/><text x="425" y="50" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600" fill="#F5E6E1" text-anchor="middle">3</text>
+
+    <text x="60" y="94" font-family="Archivo,sans-serif" font-size="11" font-weight="600" letter-spacing="1.6" fill="#4A5A62">TERMINAL STORAGE — TERMINAL OPERATOR · SHORTER FREE TIME</text>
+    <rect x="60" y="104" width="97" height="32" fill="#D8DCD8" stroke="#9AA5A0" stroke-width="1"/>
+    <text x="108" y="124" font-family="IBM Plex Mono,monospace" font-size="12" fill="#4A5A62" text-anchor="middle">3 free</text>
+    <rect x="157" y="104" width="289" height="32" fill="#F5EBD9" stroke="#B0781F" stroke-width="1"/>
+    <text x="301" y="124" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="500" fill="#B0781F" text-anchor="middle">9 days billed · $1,625 · different company</text>
+
+    <text x="446" y="168" font-family="Archivo,sans-serif" font-size="11" font-weight="600" letter-spacing="1.6" fill="#4A5A62">DETENTION — CARRIER · THEIR BOX IN YOUR HANDS</text>
+    <rect x="446" y="178" width="161" height="32" fill="#D8DCD8" stroke="#9AA5A0" stroke-width="1"/>
+    <text x="526" y="198" font-family="IBM Plex Mono,monospace" font-size="12" fill="#4A5A62" text-anchor="middle">5 free days</text>
+    <rect x="607" y="178" width="193" height="32" fill="#F5E6E1" stroke="#A83B22" stroke-width="1"/>
+    <text x="703" y="198" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="500" fill="#A83B22" text-anchor="middle">6 days · $1,125 + chassis $360</text>
+    <circle cx="625" cy="194" r="9" fill="#A83B22"/><text x="625" y="198" font-family="IBM Plex Mono,monospace" font-size="11" font-weight="600" fill="#F5E6E1" text-anchor="middle">4</text>
+
+    <line x1="60" y1="240" x2="800" y2="240" stroke="#C3CAC6" stroke-width="1"/>
+    <line x1="60" y1="236" x2="60" y2="244" stroke="#17242C" stroke-width="1"/>
+    <line x1="189" y1="236" x2="189" y2="244" stroke="#17242C" stroke-width="1"/>
+    <line x1="349" y1="236" x2="349" y2="244" stroke="#17242C" stroke-width="1"/>
+    <line x1="446" y1="230" x2="446" y2="250" stroke="#17242C" stroke-width="1.5"/>
+    <line x1="607" y1="236" x2="607" y2="244" stroke="#17242C" stroke-width="1"/>
+    <line x1="800" y1="236" x2="800" y2="244" stroke="#17242C" stroke-width="1"/>
+
+    <text x="60" y="264" font-family="IBM Plex Mono,monospace" font-size="11.5" fill="#17242C" text-anchor="middle">Mar 3</text>
+    <text x="60" y="280" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">discharge</text>
+    <text x="189" y="264" font-family="IBM Plex Mono,monospace" font-size="11.5" fill="#17242C" text-anchor="middle">Mar 7</text>
+    <text x="189" y="280" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">last free day</text>
+    <text x="349" y="264" font-family="IBM Plex Mono,monospace" font-size="11.5" fill="#17242C" text-anchor="middle">Mar 12</text>
+    <text x="349" y="280" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">exam released</text>
+    <text x="446" y="264" font-family="IBM Plex Mono,monospace" font-size="11.5" font-weight="600" fill="#17242C" text-anchor="middle">Mar 15</text>
+    <text x="446" y="280" font-family="Archivo,sans-serif" font-size="11" font-weight="600" fill="#17242C" text-anchor="middle">gate out</text>
+    <text x="607" y="264" font-family="IBM Plex Mono,monospace" font-size="11.5" fill="#17242C" text-anchor="middle">Mar 20</text>
+    <text x="607" y="280" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">empty due</text>
+    <text x="800" y="264" font-family="IBM Plex Mono,monospace" font-size="11.5" fill="#17242C" text-anchor="middle">Mar 26</text>
+    <text x="800" y="280" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">empty in</text>
+  </svg>
+  <figcaption><b>Figure 2.</b> Three clocks, two companies, one container. Gate-out on Mar 15 is the handoff: demurrage stops and detention starts in the same instant. Circled numbers mark the leaks in section 09.</figcaption>
+  </figure>
+
+  <h3>The arithmetic, day by day</h3>
+
+  <h4>Demurrage — 8 billed days</h4>
+  <table>
+    <tr><th class="mono">Day</th><th>Date</th><th>Why it was billed</th><th class="mono">Tier</th><th class="r">Charge</th></tr>
+    <tr><td class="mono">1</td><td>Mar 8</td><td>CET exam in progress</td><td class="mono">$200</td><td class="r">$200</td></tr>
+    <tr><td class="mono">2</td><td>Mar 9</td><td>CET exam in progress</td><td class="mono">$200</td><td class="r">$200</td></tr>
+    <tr><td class="mono">3</td><td>Mar 10</td><td>CET exam in progress</td><td class="mono">$200</td><td class="r">$200</td></tr>
+    <tr><td class="mono">4</td><td>Mar 11</td><td>CET exam in progress</td><td class="mono">$325</td><td class="r">$325</td></tr>
+    <tr><td class="mono">5</td><td>Mar 12</td><td>Released late in day; no slot</td><td class="mono">$325</td><td class="r">$325</td></tr>
+    <tr><td class="mono">6</td><td>Mar 13</td><td>No appointment available</td><td class="mono">$325</td><td class="r">$325</td></tr>
+    <tr><td class="mono">7</td><td>Mar 14</td><td>No appointment available</td><td class="mono">$450</td><td class="r">$450</td></tr>
+    <tr><td class="mono">8</td><td>Mar 15</td><td>No appointment until afternoon</td><td class="mono">$450</td><td class="r">$450</td></tr>
+    <tr class="tot"><td colspan="4">Demurrage total</td><td class="r bad">$2,475</td></tr>
+  </table>
+  <p>Days attributable to the importer: <strong>zero</strong>. Days billed: eight. And notice the convexity — the last three days alone cost $1,225, half the bill.</p>
+
+  <h4>The other three lines</h4>
+  <table>
+    <tr><th>Charge</th><th>Billed by</th><th class="mono">Days</th><th>Calculation</th><th class="r">Amount</th></tr>
+    <tr><td>Demurrage</td><td>Carrier</td><td class="mono">8</td><td>tiered, above</td><td class="r">$2,475</td></tr>
+    <tr><td>Terminal storage</td><td>Terminal</td><td class="mono">9</td><td>5 × $125 + 4 × $250</td><td class="r">$1,625</td></tr>
+    <tr><td>Detention</td><td>Carrier</td><td class="mono">6</td><td>3 × $150 + 3 × $225</td><td class="r">$1,125</td></tr>
+    <tr><td>Chassis per diem</td><td>Chassis pool</td><td class="mono">8</td><td>8 × $45</td><td class="r">$360</td></tr>
+    <tr class="tot"><td colspan="4">Total billed on one container</td><td class="r bad">$5,585</td></tr>
+  </table>
+
+  <h3>What is actually recoverable</h3>
+  <table>
+    <tr><th>Bucket</th><th>Basis</th><th class="r">Amount</th></tr>
+    <tr><td><strong>Preventable outright</strong></td><td>The detention half. Returning the empty on Mar 17–18, before the restriction began on Mar 19, eliminates detention and chassis entirely. No dispute needed, no risk.</td><td class="r good">$1,485</td></tr>
+    <tr><td><strong>Strong claim</strong></td><td>Grounding delay (Mar 3–5) shifts the effective LFD; appointment unavailability (Mar 13–15) is the billing party's own performance, contradicting the certification it signed under 46 CFR 541.6.</td><td class="r good">$3,150</td></tr>
+    <tr><td><strong>Arguable</strong></td><td>Exam days. Contract-dependent and carrier-dependent, but a charge that cannot change behaviour is hard to defend as an incentive.</td><td class="r">$600</td></tr>
+    <tr><td><strong>Legitimately owed</strong></td><td>Residual once the above are stripped out.</td><td class="r">$350</td></tr>
+    <tr class="tot"><td colspan="2">Total</td><td class="r">$5,585</td></tr>
+  </table>
+
+  <p>At a 70% win rate on the strong claim, the realistic outcome is roughly <strong>$1,485 prevented plus $2,205 recovered — about $3,690, two-thirds of the bill.</strong> What happens today is $0.</p>
+
+  <div class="note">
+    <span class="label">The honest part</span>
+    <p>The agent did not clear customs faster or manufacture appointment slots. It could not. What it did was act on the one leg that was genuinely controllable — the empty return — and capture evidence on the two legs that were not. That is a smaller claim than "AI fixes your supply chain," and it is a far more credible one.</p>
+  </div>
+</section>
+
+<section id="s9">
+  <div class="sec-head"><span class="idx">09</span><h2>Every place money leaks</h2></div>
+
+  <p>The charge is not the leak. The leak is everywhere the organisation fails to prevent, contest, or even notice the charge. There are seven, and they compound.</p>
+
+  <div class="leak">
+    <div class="stamp"><span class="k">LEAK</span><span class="v">01</span><span class="amt">2 days</span></div>
+    <div>
+      <h3>The clock started before you could act</h3>
+      <p>Mar 3 to 5, the box was buried in a stack, ungrounded and unappointable. Half of a four-day allowance was consumed by the terminal's own handling.</p>
+      <p>Almost nobody adjusts the last free day for this, because it needs the availability timestamp from a terminal portal that nobody checks on day two. Those two days push you two days deeper into the tier ladder — and the top tier is where the money is.</p>
+    </div>
+  </div>
+
+  <div class="leak">
+    <div class="stamp"><span class="k">LEAK</span><span class="v">02</span><span class="amt">5 days</span></div>
+    <div>
+      <h3>Billed for days you were forbidden to move</h3>
+      <p>The CET exam accounts for five of the eight billed demurrage days. The container was at a Centralised Examination Station being unloaded piece by piece, at the importer's expense. [8][9] There was no action available.</p>
+      <p>A penalty that cannot change behaviour is not an incentive. Most importers pay anyway, because nobody assembled the exam timeline while it was fresh.</p>
+    </div>
+  </div>
+
+  <div class="leak">
+    <div class="stamp"><span class="k">LEAK</span><span class="v">03</span><span class="amt">$1,225</span></div>
+    <div>
+      <h3>Billed for the terminal's own capacity failure</h3>
+      <p>Three days lost to an appointment system with no slots — and because they land at the top of the tier ladder, those three days are $1,225, nearly half the demurrage bill.</p>
+      <p>This is the strongest available claim and the one most often lost, because it rests on evidence that decays: a screenshot of an empty grid on Mar 13. If the dispatcher did not capture it, the day is unprovable by Mar 20. <strong>Evidence perishes faster than the invoice arrives.</strong></p>
+    </div>
+  </div>
+
+  <div class="leak">
+    <div class="stamp"><span class="k">LEAK</span><span class="v">04</span><span class="amt">$1,485</span></div>
+    <div>
+      <h3>Detention on a box the carrier refused to take back</h3>
+      <p>The entire second half of the bill exists because nobody watched the second clock. Had the empty gone back on Mar 17, before the restriction began on Mar 19, there would be no detention and no chassis charge.</p>
+      <p>When the restriction did bite, the consignee was charged for holding equipment they had actively tried to return — while the carrier's invoice certified that its own performance did not contribute to the charge. [19]</p>
+    </div>
+  </div>
+
+  <div class="leak">
+    <div class="stamp"><span class="k">LEAK</span><span class="v">05</span><span class="amt">silent</span></div>
+    <div>
+      <h3>Nobody knew the deadline until it had passed</h3>
+      <p>The contracted free time sat in a PDF. The discharge event sat in an EDI 315. Nothing joined them. There was no moment on Mar 5 when a system said <em>two days left, no appointment booked, exam still open</em>.</p>
+      <p>Three separate free-time allowances expired on three different days and not one of them triggered anything.</p>
+    </div>
+  </div>
+
+  <div class="leak">
+    <div class="stamp"><span class="k">LEAK</span><span class="v">06</span><span class="amt">all of it</span></div>
+    <div>
+      <h3>The dispute window closed before the dispute started</h3>
+      <p>Invoices arrive five to six weeks after discharge. Federal rules give the billed party at least 30 days to request mitigation, refund or waiver. [15][22] Meanwhile the team has moved on to four hundred other containers and reconstructing this one takes half a day.</p>
+      <p>So finance pays anything below a review threshold, and every leak above becomes permanent — regardless of merit, and regardless of whether the invoice even complied with Part 541.</p>
+    </div>
+  </div>
+
+  <div class="leak">
+    <div class="stamp"><span class="k">LEAK</span><span class="v">07</span><span class="amt">unmeasured</span></div>
+    <div>
+      <h3>Paid under duress, then never revisited</h3>
+      <p>Release of the cargo is often withheld pending settlement. The importer pays to free the goods, intending to dispute afterwards. Nothing captures that intent, no process carries it forward, and the protest quietly becomes acceptance.</p>
+    </div>
+  </div>
+
+  <h3>The scoreboard</h3>
+  <p>Of $5,585 billed on one ordinary container, roughly <strong>$4,635 was either preventable or strongly defensible.</strong> What gets paid today is all of it — not because anyone decided to, but because <strong>no single person ever held the contract terms, the event stream and the invoice in their head at the same time.</strong></p>
+</section>
+
+<section id="s10">
+  <div class="sec-head"><span class="idx">10</span><h2>Leak → agent → Temporal</h2></div>
+
+  <p>The core mapping of the project. Read the fourth column top to bottom: every entry requires state that outlives a process. That is the whole argument for Temporal, and the answer to "why not a cron job and a queue?"</p>
+
+  <table>
+    <tr><th class="mono">Leak</th><th>What fails today</th><th>What the agent does</th><th>Temporal primitive</th></tr>
+    <tr><td class="mono">01</td><td>Clock starts at discharge but the box is not collectable for two more days</td><td>Polls availability from discharge; recomputes the <em>effective</em> LFD and stamps the gap as cited evidence</td><td>Long-running workflow holding contract terms as state; activity retries against a flaky terminal portal</td></tr>
+    <tr><td class="mono">02</td><td>Exam timestamps reconstructed weeks later, if at all</td><td>Captures hold-placed and hold-released the moment each occurs; suppresses pointless spend while the box is immovable</td><td>Signal handlers on the live workflow; event history as a tamper-evident audit log</td></tr>
+    <tr><td class="mono">03</td><td>Failed appointment attempts leave no trace</td><td>Scans for slots continuously and records every failure with a timestamp while it is still provable</td><td>Durable timer loop; each attempt is an activity, so failures persist permanently in history</td></tr>
+    <tr><td class="mono">04</td><td>Second clock unwatched; advisory unread in a shared inbox</td><td>Books the empty return before any restriction exists; ingests advisories and matches them to this container's depot</td><td>Child workflow spawned at gate-out; signals into an already-sleeping workflow</td></tr>
+    <tr><td class="mono">05</td><td>No system says "two days left, nothing booked"</td><td>Wakes at LFD−72h, −48h, −24h; prices options and escalates with a costed recommendation, not a raw alert</td><td><code>workflow.sleep()</code> measured in days, surviving deploys, crashes and restarts</td></tr>
+    <tr><td class="mono">06</td><td>Dispute window expires while the team is busy</td><td>Case pre-assembled <em>before</em> the invoice arrives; Part 541 checklist run on receipt; dispute filed within 24 hours</td><td>Child workflow running weeks beyond the parent's arc; durable follow-up cadence</td></tr>
+    <tr><td class="mono">07</td><td>Payment under protest never revisited</td><td>Records the protest as state and keeps prosecuting recovery after payment</td><td>Workflow outliving the commercial event that triggered it; <code>continue-as-new</code> for long tails</td></tr>
+  </table>
+
+  <div class="note">
+    <span class="label">The line for the slide</span>
+    <p>Seven leaks, one root cause: no system held the contract, the events and the deadline in the same place for forty-five consecutive days. Temporal gives the agent a lifespan that matches the container's.</p>
+  </div>
+</section>
+
+<section id="s11">
+  <div class="sec-head"><span class="idx">11</span><h2>How the agents work</h2></div>
+
+  <p>Five narrow agents rather than one general one. Narrow agents are easier to prompt, easier to evaluate, easier to constrain, and easier to explain in thirty seconds each.</p>
+
+  <figure>
+  <svg viewBox="0 0 840 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Five agents in a pipeline: Watcher feeds Strategist which feeds Negotiator; Watcher also feeds Auditor which feeds Case Builder; outcomes feed a learning store that returns priors to the Strategist.">
+    <defs><marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+    <rect x="40" y="30" width="230" height="56" fill="#E6E9E5" stroke="#4A5A62" stroke-width="1"/>
+    <text x="155" y="52" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Watcher</text>
+    <text x="155" y="70" font-family="Archivo,sans-serif" font-size="12" fill="#4A5A62" text-anchor="middle">Normalises events and contracts</text>
+    <rect x="305" y="30" width="230" height="56" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="1"/>
+    <text x="420" y="52" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Strategist</text>
+    <text x="420" y="70" font-family="Archivo,sans-serif" font-size="12" fill="#1D5B6E" text-anchor="middle">Prices options, predicts outcome</text>
+    <rect x="570" y="30" width="230" height="56" fill="#F5EBD9" stroke="#B0781F" stroke-width="1"/>
+    <text x="685" y="52" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Negotiator</text>
+    <text x="685" y="70" font-family="Archivo,sans-serif" font-size="12" fill="#B0781F" text-anchor="middle">Books, rebooks, returns empties</text>
+    <rect x="170" y="150" width="230" height="56" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="1"/>
+    <text x="285" y="172" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Auditor</text>
+    <text x="285" y="190" font-family="Archivo,sans-serif" font-size="12" fill="#1D5B6E" text-anchor="middle">Part 541 invoice checklist</text>
+    <rect x="440" y="150" width="230" height="56" fill="#F5E6E1" stroke="#A83B22" stroke-width="1"/>
+    <text x="555" y="172" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Case builder</text>
+    <text x="555" y="190" font-family="Archivo,sans-serif" font-size="12" fill="#A83B22" text-anchor="middle">Cited evidence chronology</text>
+    <rect x="305" y="250" width="230" height="56" fill="#E6E9E5" stroke="#4A5A62" stroke-width="1"/>
+    <text x="420" y="272" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Learning store</text>
+    <text x="420" y="290" font-family="Archivo,sans-serif" font-size="12" fill="#4A5A62" text-anchor="middle">Priors, per port and per carrier</text>
+    <line x1="270" y1="58" x2="297" y2="58" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a1)"/>
+    <line x1="535" y1="58" x2="562" y2="58" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a1)"/>
+    <path d="M155 86 L155 122 L285 122 L285 142" fill="none" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a1)"/>
+    <line x1="400" y1="178" x2="432" y2="178" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a1)"/>
+    <path d="M555 206 L555 228 L420 228 L420 242" fill="none" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a1)"/>
+    <path d="M305 278 L18 278 L18 14 L420 14 L420 22" fill="none" stroke="#1D5B6E" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#a1)"/>
+    <text x="200" y="140" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62">invoice arrives</text>
+  </svg>
+  <figcaption><b>Figure 3.</b> Agent topology. The dashed return path is the learning loop — outcomes become priors that sharpen the next container's assessment.</figcaption>
+  </figure>
+
+  <h3>Watcher — ingest and normalise</h3>
+  <p>Turns a mess of formats into one clean event model: EDI 315 and 322 messages, vessel schedules, terminal portal scrapes, customs status codes, carrier advisory emails, gate receipts, equipment interchange receipts and invoice PDFs.</p>
+  <p>Three jobs here are genuinely hard and genuinely agentic:</p>
+  <ul>
+    <li><strong>Resolving identity.</strong> The same container appears as <code>MSKU7481920</code>, <code>MSKU 748192-0</code> and "the Ningbo box" across four systems.</li>
+    <li><strong>Extracting terms.</strong> Pulling free-time allowances, tier tables, weekend rules and per-port exceptions out of a contract written as prose.</li>
+    <li><strong>Classifying unstructured comms.</strong> Reading a carrier advisory and deciding whether it affects <em>this</em> container at <em>this</em> depot — the difference between leak 04 happening and not.</li>
+  </ul>
+  <p>It also flags anomalies: an event contradicting an earlier one, or an expected event that never arrived.</p>
+
+  <h3>Strategist — predict and price</h3>
+  <p>Computes the effective LFD from actual availability rather than nominal discharge. Forecasts probability of gate-out before the LFD given chassis supply, appointment density, trucker capacity and terminal congestion. Then produces a <strong>costed options table</strong> — not a recommendation, a menu with expected values.</p>
+  <table>
+    <tr><th>Option</th><th class="mono">Cost</th><th class="mono">P(success)</th><th class="mono">Expected saving</th><th>Note</th></tr>
+    <tr><td>Do nothing</td><td class="mono">$0</td><td class="mono">—</td><td class="mono">$0</td><td>Baseline; container enters tier 3</td></tr>
+    <tr><td>Expedite drayage</td><td class="mono">$340</td><td class="mono">0.72</td><td class="mono">$1,190</td><td>Premium trucker with slot access</td></tr>
+    <tr><td>Move to off-dock yard</td><td class="mono">$220</td><td class="mono">0.85</td><td class="mono">$980</td><td>Stops terminal clock; adds a leg later</td></tr>
+    <tr><td>Pre-book empty return</td><td class="mono">$0</td><td class="mono">0.90</td><td class="mono">$1,485</td><td>Highest expected value in this case</td></tr>
+    <tr><td>Request free-time extension</td><td class="mono">$0</td><td class="mono">0.35</td><td class="mono">$650</td><td>Carrier-dependent</td></tr>
+  </table>
+  <p>The crucial output is the <strong>counterfactual</strong>: what the agent predicts happens if it does nothing. Stored, then checked against reality — which is what makes the savings claim auditable rather than assertable.</p>
+
+  <h3>Negotiator — act on the world</h3>
+  <p>Books and rebooks drayage. Scans for terminal appointments continuously, which is a real practice — some 3PLs already run 24/7 slot-scanning to catch releases at off-peak hours. [10] Books the empty return early. Requests free-time extensions with a reasoned case. Coordinates chassis. Drafts and sends messages, then manages follow-up over weeks.</p>
+  <p>The bounded mandate is the whole game: hard spend caps, no contract acceptance, mandatory escalation on anomalies, and a defined settlement band it may accept without asking.</p>
+
+  <h3>Auditor — validate the invoice</h3>
+  <p>Underrated, and the most legally grounded of the five. On invoice receipt it runs a checklist derived directly from 46 CFR Part 541:</p>
+  <table>
+    <tr><th>Check</th><th>Basis</th><th>If it fails</th></tr>
+    <tr><td>Issued within 30 days of last charge?</td><td>541.7(a)</td><td>No obligation to pay [16][18]</td></tr>
+    <tr><td>All required identifying, timing, rate, dispute and certification fields present?</td><td>541.6, 541.5</td><td>No obligation to pay that charge [19][20]</td></tr>
+    <tr><td>Certification present that the billing party's performance did not contribute?</td><td>541.6</td><td>Contradiction with recorded evidence [19][21]</td></tr>
+    <tr><td>Tier table applied per contract?</td><td>Contract</td><td>Recompute and claim the difference</td></tr>
+    <tr><td>Weekend and holiday counting per contract?</td><td>Contract</td><td>Recompute</td></tr>
+    <tr><td>Same day billed twice under two labels?</td><td>Contract / tariff</td><td>Claim the overlap</td></tr>
+    <tr><td>Free time correct for this contract and port?</td><td>Contract</td><td>Recompute</td></tr>
+  </table>
+  <p>A meaningful share of charges are simply <em>wrong</em> or <em>non-compliant</em>, independent of whether the underlying delay was justified. This is the cheapest money in the entire system.</p>
+
+  <h3>Case builder — prosecute the dispute</h3>
+  <p>Assembles the evidence chronology with a source document cited for every factual claim — <strong>no citation, no claim.</strong> Drafts the dispute letter, matched to the specific defect the Auditor found. Then runs the dispute as a long-lived process: submit inside the window, follow up on schedule, escalate through carrier tiers, evaluate partial settlement against expected recovery, accept within mandate or hand to a human. A Charge Complaint to the FMC remains available throughout. [22]</p>
+
+  <h3>The learning loop</h3>
+  <p>Per-port, per-carrier, per-terminal statistics on what works. Which arguments win against which carrier. How far ahead appointments genuinely need booking at each terminal. Which depots issue return restrictions and when. That feeds the Strategist's priors — and upward into procurement: <em>this carrier's free time is nominally four days but effectively two at this port, so price the next contract accordingly.</em> Free time is negotiable, and an extra two days on a high-volume lane can be worth more than a rate reduction. [23]</p>
+</section>
+
+<section id="s12">
+  <div class="sec-head"><span class="idx">12</span><h2>How Temporal works</h2></div>
+
+  <p>Each primitive earns its place with a concrete job. This is the section to memorise before judging.</p>
+
+  <table>
+    <tr><th style="width:200px">Primitive</th><th>What it does here</th></tr>
+    <tr><td><strong>Entity workflows</strong></td><td>One workflow instance per container, alive for its full 24-to-60 day life. Ten thousand containers, ten thousand live agents. The architectural centrepiece.</td></tr>
+    <tr><td><strong>Durable timers</strong></td><td><code>sleep()</code> measured in days. Checkpoints at LFD−72h, −48h, −24h, then escalating daily reassessments. Survives deploys, crashes and restarts.</td></tr>
+    <tr><td><strong>Signals</strong></td><td>External events interrupting a sleeping workflow: hold placed and released, gate-out scanned, advisory published, empty accepted, invoice received, approval granted.</td></tr>
+    <tr><td><strong>Queries</strong></td><td>The control tower reads live agent state straight from the workflow — risk, days remaining, options under consideration, pending approvals. No separate read model to keep in sync.</td></tr>
+    <tr><td><strong>Updates</strong></td><td>Synchronous request-response into a running workflow when a human overrides a decision and needs an immediate answer back.</td></tr>
+    <tr><td><strong>Child workflows</strong></td><td>Gate-out spawns the detention workflow. Invoice arrival spawns the dispute workflow, which outlives its parent by weeks.</td></tr>
+    <tr><td><strong>Activity retries</strong></td><td>Terminal portals and carrier APIs fail constantly. Exponential backoff, per-activity timeouts, non-retryable classes for genuine business failures.</td></tr>
+    <tr><td><strong>Sagas</strong></td><td>Booked a trucker, then a hold landed — cancel the booking, release the slot, notify the depot. Compensating activities executed in reverse.</td></tr>
+    <tr><td><strong>Heartbeats</strong></td><td>Slow terminal scrapes and large document extractions report progress, so a stuck worker is detected rather than hanging silently.</td></tr>
+    <tr><td><strong>Continue-as-new</strong></td><td>Containers that drag on accumulate large histories; restart with condensed state and keep going.</td></tr>
+    <tr><td><strong>Event history</strong></td><td>Every decision, input, LLM call and output permanently recorded and replayable. Under Part 541 this is not infrastructure — it <em>is</em> the dispute evidence.</td></tr>
+    <tr><td><strong>Search attributes</strong></td><td>Query the whole fleet: all containers at LAX with an LFD inside 48 hours and no booked appointment. The dashboard's filter layer, for free.</td></tr>
+    <tr><td><strong>Task queues</strong></td><td>Route LLM-heavy activities to GPU-backed workers, cheap I/O to lightweight ones. Fleet-wide rate limiting on a carrier API at the worker level.</td></tr>
+    <tr><td><strong>Schedules</strong></td><td>Daily reconciliation sweeps, weekly carrier performance rollups, month-end accrual reporting.</td></tr>
+    <tr><td><strong>Time-skipping tests</strong></td><td>Compresses 45 days into 30 seconds. Both the test harness and the demo weapon.</td></tr>
+    <tr><td><strong>Versioning</strong></td><td>Deploy new agent logic while ten thousand workflows are mid-flight without breaking those already running.</td></tr>
+  </table>
+</section>
+
+<section id="s13">
+  <div class="sec-head"><span class="idx">13</span><h2>The workflow spine</h2></div>
+
+  <p>Three workflows mirror the three real-world arcs. Nothing in workflow code may be non-deterministic — no LLM calls, no clock reads outside <code>workflow.now()</code>, no randomness, no I/O. All of that lives in activities.</p>
+
+  <figure>
+  <svg viewBox="0 0 840 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vertical workflow spine: start at discharge, risk checkpoint loop, agent reasoning in an activity, approval gate waiting on a signal, then a dispute child workflow that outlives the parent.">
+    <defs><marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+    <rect x="280" y="24" width="280" height="60" fill="#E6E9E5" stroke="#4A5A62" stroke-width="1"/>
+    <text x="420" y="48" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Workflow starts at discharge</text>
+    <text x="420" y="68" font-family="Archivo,sans-serif" font-size="12" fill="#4A5A62" text-anchor="middle">Contract free time loaded as state</text>
+    <rect x="280" y="128" width="280" height="60" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="1"/>
+    <text x="420" y="152" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Risk checkpoint loop</text>
+    <text x="420" y="172" font-family="Archivo,sans-serif" font-size="12" fill="#1D5B6E" text-anchor="middle">Durable sleep, wakes near the LFD</text>
+    <text x="580" y="153" font-family="IBM Plex Mono,monospace" font-size="12" fill="#1D5B6E">↻ until gate-out</text>
+    <text x="580" y="171" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62">or wakes early on a signal</text>
+    <rect x="280" y="232" width="280" height="60" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="1"/>
+    <text x="420" y="256" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Agent reasons and prices options</text>
+    <text x="420" y="276" font-family="Archivo,sans-serif" font-size="12" fill="#1D5B6E" text-anchor="middle">LLM call inside an activity</text>
+    <rect x="280" y="336" width="280" height="60" fill="#F5EBD9" stroke="#B0781F" stroke-width="1"/>
+    <text x="420" y="360" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Approval gate above threshold</text>
+    <text x="420" y="380" font-family="Archivo,sans-serif" font-size="12" fill="#B0781F" text-anchor="middle">Workflow waits on a signal</text>
+    <text x="580" y="370" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62">parks indefinitely, safely</text>
+    <rect x="280" y="440" width="280" height="60" fill="#F5E6E1" stroke="#A83B22" stroke-width="1"/>
+    <text x="420" y="464" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Dispute child workflow</text>
+    <text x="420" y="484" font-family="Archivo,sans-serif" font-size="12" fill="#A83B22" text-anchor="middle">Outlives the parent by weeks</text>
+    <line x1="420" y1="84" x2="420" y2="120" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a2)"/>
+    <line x1="420" y1="188" x2="420" y2="224" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a2)"/>
+    <line x1="420" y1="292" x2="420" y2="328" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a2)"/>
+    <line x1="420" y1="396" x2="420" y2="432" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a2)"/>
+  </svg>
+  <figcaption><b>Figure 4.</b> The deterministic spine. Reasoning happens inside activities so it can be replayed; orchestration happens in the workflow so it can be trusted.</figcaption>
+  </figure>
+
+  <h3>The five pieces of code that carry the argument</h3>
+
+  <h4>1. Sleeping for days, waking on an event</h4>
+  <p>A durable timer raced against a signal. The agent sleeps through the boring parts but wakes instantly when customs places a hold.</p>
+<pre><span class="c"># race a multi-day timer against any incoming signal</span>
+<span class="k">try</span>:
+    <span class="k">await</span> workflow.wait_condition(
+        <span class="k">lambda</span>: self.reassess_now <span class="k">or</span> self.gated_out_at <span class="k">is not</span> <span class="k">None</span>,
+        timeout=target - workflow.now(),
+    )
+    <span class="k">return</span> <span class="k">True</span>          <span class="c"># woke early — something happened</span>
+<span class="k">except</span> asyncio.TimeoutError:
+    <span class="k">return</span> <span class="k">False</span>         <span class="c"># reached the scheduled checkpoint</span></pre>
+
+  <h4>2. The approval gate</h4>
+  <p>No polling loop, no state machine, no expiring job. The workflow parks for as long as the human takes.</p>
+<pre><span class="k">if</span> choice.requires_approval <span class="k">or</span> choice.cost_usd > AUTO_APPROVE_LIMIT_USD:
+    <span class="k">await</span> workflow.execute_activity(act.notify_human, ...)
+    <span class="k">await</span> workflow.wait_condition(<span class="k">lambda</span>: choice.action <span class="k">in</span> self.approvals)</pre>
+
+  <h4>3. Compensation, so the agent leaves nothing broken behind</h4>
+  <p>This is what stops an autonomous agent creating phantom bookings and no-show fees in real carrier systems. Note that a missing appointment slot <em>raises</em> rather than returning — it is not an error, it is evidence, recorded before the unwind.</p>
+<pre>compensations = []
+<span class="k">try</span>:
+    booking = <span class="k">await</span> workflow.execute_activity(act.book_drayage, ...)
+    compensations.append((act.cancel_drayage, booking))
+
+    slot = <span class="k">await</span> workflow.execute_activity(act.reserve_appointment, ...)
+    <span class="k">if</span> slot <span class="k">is</span> <span class="k">None</span>:
+        self.events.append(MilestoneEvent(kind=<span class="s">"appointment_unavailable"</span>, ...))
+        <span class="k">raise</span> NoSlotAvailable()          <span class="c"># leak 03, captured as evidence</span>
+    compensations.append((act.release_appointment, slot))
+<span class="k">except</span> Exception:
+    <span class="k">for</span> fn, arg <span class="k">in</span> <span class="k">reversed</span>(compensations):
+        <span class="k">await</span> workflow.execute_activity(fn, arg, ...)</pre>
+
+  <h4>4. The handoff between clocks</h4>
+  <p>Gate-out ends the demurrage arc and begins the detention arc. <code>ABANDON</code> is what lets the second clock outlive the first — and the second clock is where $1,485 of our worked example lives.</p>
+<pre><span class="k">await</span> workflow.start_child_workflow(
+    DetentionWorkflow.run, args=[container, terms],
+    id=<span class="s">f"detention::{container.container_id}"</span>,
+    parent_close_policy=ParentClosePolicy.ABANDON,
+)</pre>
+
+  <h4>5. The dashboard's read path</h4>
+  <p>No projection table, no cache invalidation, no eventual consistency. The workflow <em>is</em> the read model.</p>
+<pre><span class="k">@workflow.query</span>
+<span class="k">def</span> state(self) -> dict:
+    <span class="k">return</span> {
+        <span class="s">"effective_lfd"</span>: <span class="k">str</span>(self.effective_lfd),
+        <span class="s">"holds"</span>: <span class="k">sorted</span>(self.holds),
+        <span class="s">"awaiting_approval"</span>: self.pending_approval,
+        <span class="s">"counterfactual_usd"</span>: self.counterfactual_usd,
+    }</pre>
+
+  <div class="note">
+    <span class="label">The determinism boundary</span>
+    <p>Workflow code replays identically forever, so it cannot contain an LLM call, a random number or a wall-clock read. The agent's reasoning goes inside activities; the workflow only orchestrates. Judges who know Temporal will probe this, and getting it right is the difference between "used Temporal" and "understood Temporal".</p>
+  </div>
+</section>
+
+<section id="s14">
+  <div class="sec-head"><span class="idx">14</span><h2>System architecture</h2></div>
+
+  <figure>
+  <svg viewBox="0 0 840 452" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture: four event source categories feed a normalisation layer, which signals into a Temporal cluster containing demurrage, detention and dispute workflows, which drive a control tower and outbound actions.">
+    <defs><marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+    <text x="40" y="20" font-family="Archivo,sans-serif" font-size="11" font-weight="600" letter-spacing="1.6" fill="#4A5A62">EVENT SOURCES</text>
+    <rect x="40" y="30" width="180" height="48" fill="#E6E9E5" stroke="#9AA5A0" stroke-width="1"/>
+    <text x="130" y="52" font-family="Archivo,sans-serif" font-size="13.5" font-weight="600" fill="#17242C" text-anchor="middle">Carrier &amp; EDI</text>
+    <text x="130" y="68" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">315, 322, advisories</text>
+    <rect x="240" y="30" width="180" height="48" fill="#E6E9E5" stroke="#9AA5A0" stroke-width="1"/>
+    <text x="330" y="52" font-family="Archivo,sans-serif" font-size="13.5" font-weight="600" fill="#17242C" text-anchor="middle">Terminal portals</text>
+    <text x="330" y="68" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">Availability, slots</text>
+    <rect x="440" y="30" width="180" height="48" fill="#E6E9E5" stroke="#9AA5A0" stroke-width="1"/>
+    <text x="530" y="52" font-family="Archivo,sans-serif" font-size="13.5" font-weight="600" fill="#17242C" text-anchor="middle">Customs</text>
+    <text x="530" y="68" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">Holds and releases</text>
+    <rect x="640" y="30" width="180" height="48" fill="#E6E9E5" stroke="#9AA5A0" stroke-width="1"/>
+    <text x="730" y="52" font-family="Archivo,sans-serif" font-size="13.5" font-weight="600" fill="#17242C" text-anchor="middle">Documents</text>
+    <text x="730" y="68" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">Contracts, EIRs, invoices</text>
+    <line x1="130" y1="78" x2="130" y2="102" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a3)"/>
+    <line x1="330" y1="78" x2="330" y2="102" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a3)"/>
+    <line x1="530" y1="78" x2="530" y2="102" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a3)"/>
+    <line x1="730" y1="78" x2="730" y2="102" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a3)"/>
+    <rect x="40" y="110" width="780" height="48" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="1"/>
+    <text x="430" y="132" font-family="Archivo,sans-serif" font-size="13.5" font-weight="600" fill="#17242C" text-anchor="middle">Normalisation and extraction — Watcher agent</text>
+    <text x="430" y="148" font-family="Archivo,sans-serif" font-size="11" fill="#1D5B6E" text-anchor="middle">Identity resolution · term extraction · advisory classification → signals</text>
+    <line x1="430" y1="158" x2="430" y2="182" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a3)"/>
+    <rect x="40" y="190" width="780" height="152" fill="none" stroke="#17242C" stroke-width="1" stroke-dasharray="6 4"/>
+    <text x="58" y="212" font-family="Archivo,sans-serif" font-size="11" font-weight="600" letter-spacing="1.6" fill="#17242C">TEMPORAL CLUSTER — ONE WORKFLOW PER CONTAINER</text>
+    <rect x="70" y="228" width="230" height="56" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="1"/>
+    <text x="185" y="250" font-family="Archivo,sans-serif" font-size="13.5" font-weight="600" fill="#17242C" text-anchor="middle">DemurrageWorkflow</text>
+    <text x="185" y="268" font-family="Archivo,sans-serif" font-size="11" fill="#1D5B6E" text-anchor="middle">discharge → gate-out</text>
+    <rect x="325" y="228" width="230" height="56" fill="#F5EBD9" stroke="#B0781F" stroke-width="1"/>
+    <text x="440" y="250" font-family="Archivo,sans-serif" font-size="13.5" font-weight="600" fill="#17242C" text-anchor="middle">DetentionWorkflow</text>
+    <text x="440" y="268" font-family="Archivo,sans-serif" font-size="11" fill="#B0781F" text-anchor="middle">gate-out → empty return</text>
+    <rect x="580" y="228" width="210" height="56" fill="#F5E6E1" stroke="#A83B22" stroke-width="1"/>
+    <text x="685" y="250" font-family="Archivo,sans-serif" font-size="13.5" font-weight="600" fill="#17242C" text-anchor="middle">DisputeWorkflow</text>
+    <text x="685" y="268" font-family="Archivo,sans-serif" font-size="11" fill="#A83B22" text-anchor="middle">invoice → settlement</text>
+    <line x1="300" y1="256" x2="317" y2="256" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a3)"/>
+    <line x1="555" y1="256" x2="572" y2="256" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a3)"/>
+    <text x="430" y="312" font-family="Archivo,sans-serif" font-size="11.5" fill="#4A5A62" text-anchor="middle">Activity workers — reasoning queue (LLM) and I/O queue (portals, APIs)</text>
+    <text x="430" y="330" font-family="Archivo,sans-serif" font-size="11.5" fill="#4A5A62" text-anchor="middle">Event history serves as the permanent, replayable audit trail</text>
+    <path d="M230 342 L230 366" fill="none" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a3)"/>
+    <path d="M630 342 L630 366" fill="none" stroke="#4A5A62" stroke-width="1.2" marker-end="url(#a3)"/>
+    <rect x="40" y="374" width="380" height="52" fill="#E6E9E5" stroke="#4A5A62" stroke-width="1"/>
+    <text x="230" y="396" font-family="Archivo,sans-serif" font-size="13.5" font-weight="600" fill="#17242C" text-anchor="middle">Control tower</text>
+    <text x="230" y="414" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">Queries for live state · search attributes for fleet filters</text>
+    <rect x="440" y="374" width="380" height="52" fill="#E6E9E5" stroke="#4A5A62" stroke-width="1"/>
+    <text x="630" y="396" font-family="Archivo,sans-serif" font-size="13.5" font-weight="600" fill="#17242C" text-anchor="middle">Outbound actions</text>
+    <text x="630" y="414" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62" text-anchor="middle">Bookings · appointments · empty returns · disputes</text>
+  </svg>
+  <figcaption><b>Figure 5.</b> Signals flow down into sleeping workflows; queries flow back out to the dashboard. Nothing between the ingestion layer and the UI needs its own database.</figcaption>
+  </figure>
+
+  <p><strong>No separate state store.</strong> Conventional agent architectures bolt a vector database on and call it memory. Here the workflow state <em>is</em> the memory — durable, queryable, and consistent with the audit log by construction, because they are the same thing.</p>
+  <p><strong>Split task queues.</strong> LLM activities go to a reasoning queue with low concurrency and generous timeouts; portal scrapes go to a cheap I/O queue with aggressive retries. This also gives fleet-wide rate limiting against a carrier API for free, without coordination between workflows.</p>
+  <p><strong>Workflows sleeping on timers consume no worker capacity.</strong> Concurrency is bounded by activity execution, not by how many agents are alive — which is why one agent per container is affordable at all.</p>
+</section>
+
+<section id="s15">
+  <div class="sec-head"><span class="idx">15</span><h2>Event taxonomy</h2></div>
+
+  <p>Every event carries a source document identifier. This is not bookkeeping pedantry — under Part 541 it is what turns a log into a usable dispute, and it is the constraint that keeps the Case Builder honest.</p>
+
+  <table>
+    <tr><th>Event</th><th>Delivered as</th><th>Effect on the agent</th></tr>
+    <tr><td class="mono">discharged</td><td>Workflow start</td><td>Starts the demurrage arc, sets nominal LFD</td></tr>
+    <tr><td class="mono">container_available</td><td>Poll or signal</td><td>Shifts the effective LFD; the gap becomes leak-01 evidence</td></tr>
+    <tr><td class="mono">hold_placed</td><td>Signal</td><td>Suppresses intervention; opens a defensible window</td></tr>
+    <tr><td class="mono">hold_released</td><td>Signal</td><td>Closes the window; triggers immediate reassessment</td></tr>
+    <tr><td class="mono">appointment_unavailable</td><td>Activity result</td><td>Recorded as leak-03 evidence while it is still provable</td></tr>
+    <tr><td class="mono">appointment_booked</td><td>Activity result</td><td>Lowers risk; sets an expected gate-out</td></tr>
+    <tr><td class="mono">gate_out</td><td>Signal</td><td>Ends demurrage, spawns the detention child workflow</td></tr>
+    <tr><td class="mono">cargo_stripped</td><td>Signal</td><td>Triggers empty-return booking — the highest-value action in the whole lifecycle</td></tr>
+    <tr><td class="mono">carrier_advisory</td><td>Signal</td><td>Matched against this container's depot; may open leak-04</td></tr>
+    <tr><td class="mono">empty_returned</td><td>Signal</td><td>Ends detention</td></tr>
+    <tr><td class="mono">invoice_received</td><td>Signal</td><td>Spawns the dispute workflow; starts the 30-day regulatory timer</td></tr>
+    <tr><td class="mono">carrier_replied</td><td>Signal</td><td>Advances or closes the dispute</td></tr>
+    <tr><td class="mono">approval_granted</td><td>Signal</td><td>Releases a parked workflow</td></tr>
+  </table>
+
+  <p>Three fields make an event usable: <code>occurred_at</code> (when it happened in the world, not when we learned of it), <code>source_system</code>, and <code>source_document_id</code>. An event without the third is a rumour and cannot appear in a dispute.</p>
+</section>
+
+<section id="s16">
+  <div class="sec-head"><span class="idx">16</span><h2>Guardrails</h2></div>
+
+  <p>An agent that spends money and sends messages into carrier systems needs bounds that are structural, not merely prompted. Every one of these is enforced in workflow code, where it can be audited, rather than in a system prompt, where it can be talked around.</p>
+
+  <ul>
+    <li><strong>Hard spend cap per action and per container.</strong> Anything above the auto-approve limit parks on a signal and waits, indefinitely.</li>
+    <li><strong>No contract acceptance.</strong> The agent may request an extension; it may never agree to amended terms.</li>
+    <li><strong>Bounded settlement authority.</strong> The Case Builder may accept an offer above a defined fraction of the claim and must escalate anything below.</li>
+    <li><strong>Mandatory escalation on anomaly.</strong> Contradictory events, missing expected events, or a low-confidence assessment all route to a human.</li>
+    <li><strong>Compensation is required, not optional.</strong> Any action with a real-world side effect must register a compensator before the next step runs.</li>
+    <li><strong>No claim without a citation.</strong> The Case Builder cannot assert a fact with no <code>source_document_id</code>. Enforced at assembly time, not requested in a prompt.</li>
+    <li><strong>Humans submit above threshold.</strong> The agent assembles and drafts; a person files. Nothing here changes who is legally responsible.</li>
+    <li><strong>Full replayability.</strong> Every input to every decision is in event history, so any disputed action can be reconstructed exactly as the agent saw it.</li>
+  </ul>
+
+  <div class="warn">
+    <span class="label">The honest limitation</span>
+    <p>The agent's predictions are only as good as its priors, and at launch it has none. Early deployment should run in shadow mode — assessing and recommending without acting — until the counterfactual record shows its calls are calibrated. Say this out loud to judges; claiming otherwise invites the obvious question.</p>
+  </div>
+</section>
+
+<section id="s17">
+  <div class="sec-head"><span class="idx">17</span><h2>Impact model</h2></div>
+
+  <p>Three scales, from one container to the industry. Every assumption is stated so a judge can disagree with it precisely rather than dismiss the whole number.</p>
+
+  <h3>Scale 1 — one container</h3>
+  <table>
+    <tr><th>Line</th><th class="r">Today</th><th class="r">With agents</th></tr>
+    <tr><td>Demurrage</td><td class="r">$2,475</td><td class="r">contested</td></tr>
+    <tr><td>Terminal storage</td><td class="r">$1,625</td><td class="r">contested</td></tr>
+    <tr><td>Detention</td><td class="r">$1,125</td><td class="r good">$0</td></tr>
+    <tr><td>Chassis per diem</td><td class="r">$360</td><td class="r good">$0</td></tr>
+    <tr class="tot"><td>Net outcome</td><td class="r bad">$5,585 paid</td><td class="r good">≈ $1,895 paid</td></tr>
+  </table>
+
+  <h3>Scale 2 — a mid-size importer</h3>
+  <p>3,000 containers a year through US ports. Assumptions are deliberately conservative and shown so they can be argued with.</p>
+  <table>
+    <tr><th>Assumption</th><th class="r">Value</th><th>Basis</th></tr>
+    <tr><td>Annual container volume</td><td class="r">3,000</td><td>Mid-size retailer profile</td></tr>
+    <tr><td>Share incurring any D&amp;D</td><td class="r">15%</td><td>Assumption — tune per lane and port</td></tr>
+    <tr><td>Containers affected</td><td class="r">450</td><td>Derived</td></tr>
+    <tr><td>Average charge per affected container</td><td class="r">$2,000</td><td>Close to the US-port 14-day benchmark [2][3]</td></tr>
+    <tr class="tot"><td>Annual D&amp;D spend</td><td class="r bad">$900,000</td><td></td></tr>
+  </table>
+  <table>
+    <tr><th>Agent effect</th><th class="r">Rate</th><th class="r">Value</th></tr>
+    <tr><td>Prevented — early action on the controllable leg</td><td class="r">35%</td><td class="r good">$315,000</td></tr>
+    <tr><td>Of the remainder, share contestable with evidence</td><td class="r">55%</td><td class="r">$321,750</td></tr>
+    <tr><td>Dispute win rate</td><td class="r">65%</td><td class="r good">$209,138</td></tr>
+    <tr class="tot"><td>Annual benefit</td><td class="r">58%</td><td class="r good">≈ $524,000</td></tr>
+  </table>
+  <p>Plus roughly 900 hours of ops time — about half a full-time role — currently spent on reconciliation and dispute assembly.</p>
+
+  <h3>Scale 3 — a freight forwarder</h3>
+  <p>A published illustrative case: a mid-size forwarder handling 400 containers a month averaging 1.5 excess days at $175 a day pays around <strong>$105,000 a month — $1.26 million a year</strong> in avoidable D&amp;D, a figure that can exceed net profit on some lanes. [23] At the same 58% effect, that is roughly $730,000 a year.</p>
+  <p>Forwarders are the sharper wedge commercially: carriers debit their account before they have collected from the shipper, so D&amp;D is a cash-flow problem as well as a margin problem. [23]</p>
+
+  <h3>Scale 4 — the industry</h3>
+  <p>The FMC's $15.4 billion over five years works out to roughly <strong>$3 billion a year</strong> from nine carriers in US trades alone. [1] The billed-versus-collected gap of about a fifth [4] shows what happens when disputes are actually made. Closing even half of the remaining preventable-and-disputable share is a billion-dollar-a-year swing in a single national market.</p>
+
+  <div class="warn">
+    <span class="label">How to present this honestly</span>
+    <p>Do not claim the industry number as your addressable market. Lead with the one-container arithmetic, which is fully shown and checkable; use the importer model as the customer-level case; cite the FMC figure only to establish that the category is large. Judges reward a defensible small number over an indefensible big one.</p>
+  </div>
+</section>
+
+<section id="s18">
+  <div class="sec-head"><span class="idx">18</span><h2>Proving the value</h2></div>
+
+  <p>Judges are trained to distrust AI savings numbers, so metric design matters as much as the metric. Be the team that shows its error bars.</p>
+
+  <h3>The counterfactual ledger</h3>
+  <p>For every intervention the agent stores what it predicted would happen if it did nothing. Because the simulation keeps running, that prediction gets scored against what actually occurred. The dashboard therefore does not <em>claim</em> savings; it <em>evidences</em> them, and it shows the cases where the agent was wrong.</p>
+
+  <h3>Metrics worth showing</h3>
+  <table>
+    <tr><th>Metric</th><th>Why it matters</th></tr>
+    <tr><td><strong>Charges prevented</strong></td><td>D&amp;D avoided against the counterfactual baseline. Worth more per dollar than recovery because it carries no dispute risk</td></tr>
+    <tr><td><strong>Charges recovered</strong></td><td>Dispute wins, in dollars and as a share of amounts contested</td></tr>
+    <tr><td><strong>Dispute rate</strong></td><td>Share of eligible charges actually contested. Today near zero, which is the point</td></tr>
+    <tr><td><strong>Invoice compliance rate</strong></td><td>Share of received invoices failing a Part 541 check. Free money, and a hard number carriers cannot argue with</td></tr>
+    <tr><td><strong>Evidence completeness</strong></td><td>Share of billed days with a cited source document. Predicts win rate better than anything else</td></tr>
+    <tr><td><strong>Intervention precision</strong></td><td>Share of interventions that actually prevented a charge. Guards against an agent that spends freely to look busy</td></tr>
+    <tr><td><strong>Ops hours avoided</strong></td><td>Manual reconciliation and dispute-assembly time displaced</td></tr>
+    <tr><td><strong>Prediction calibration</strong></td><td>Predicted versus realised charges. The number that earns the right to act autonomously</td></tr>
+  </table>
+
+  <h3>The demo comparison</h3>
+  <p>Run the same synthetic fleet twice — agents on, agents off — and show both counters side by side. One toggle delivers the entire business case without a bullet point.</p>
+</section>
+
+<section id="s19">
+  <div class="sec-head"><span class="idx">19</span><h2>Build plan</h2></div>
+
+  <p>Depth on one container, scale on the map. That combination is what a demo needs.</p>
+
+  <h3>Build fully</h3>
+  <ul>
+    <li>The Watcher over a synthetic event stream for roughly 200 containers, with realistic distributions of customs holds, chassis shortages, appointment scarcity and return restrictions</li>
+    <li>The Strategist with a real costed options table and a stored counterfactual</li>
+    <li>The checkpoint timer loop, the approval signal, and one complete intervention path with compensation</li>
+    <li><strong>The empty-return path</strong> — it is the highest-value action in the lifecycle and the clearest demo moment</li>
+    <li>The Auditor's Part 541 checklist plus tier and weekend recompute</li>
+    <li>The Case Builder's cited chronology and drafted dispute</li>
+    <li>The control tower: fleet map, per-container reasoning trace, and the Temporal event history viewer beside it</li>
+  </ul>
+
+  <h3>Mock credibly</h3>
+  <ul>
+    <li>Carrier and terminal APIs — mock services over the synthetic event generator. Nobody expects a live carrier integration</li>
+    <li>Outbound email and Slack — log and display rather than send</li>
+    <li>The learning store — seed the priors and show the shape of the loop</li>
+    <li>Seed a real document set: gate receipts, EIRs and a deliberately Part-541-non-compliant invoice, so the Auditor has something genuine to catch</li>
+  </ul>
+
+  <h3>Claim as roadmap, do not build</h3>
+  <ul>
+    <li>Container-to-container agent negotiation for shared drayage</li>
+    <li>Procurement feedback into contract renewal</li>
+    <li>FMC Charge Complaint filing and legal escalation</li>
+  </ul>
+
+  <div class="note">
+    <span class="label">The one thing not to skip</span>
+    <p>Temporal's time-skipping test environment. It is both your test harness and the single most persuasive ten seconds of the demo. Wire it early.</p>
+  </div>
+</section>
+
+<section id="s20">
+  <div class="sec-head"><span class="idx">20</span><h2>Demo script</h2></div>
+
+  <p>Design everything backwards from three moments. Open cold — no architecture slide. Just the live map and a running counter.</p>
+
+  <h3>Moment one — time collapse</h3>
+  <p>Zoom into <code>MSKU 748192-0</code>. Run its 45-day life in about thirty seconds: sleeping, waking at LFD−72h, detecting the exam, suppressing pointless spend, recording appointment failures, then booking the empty return on day 13 and closing the second clock before it opens. Say the line out loud: <em>that was forty-five days, and every decision you just watched is durably recorded.</em></p>
+
+  <h3>Moment two — the kill</h3>
+  <p>Mid-dispute, kill the worker on stage. The dashboard freezes. Wait three full seconds — let it be uncomfortable. Restart. The agent resumes mid-thought, same container, same step, memory intact. <em>An agent framework would have lost this. The container is still in the world, so the agent is still alive.</em></p>
+  <p>This is the most persuasive ten seconds available to you, because every judge has watched an LLM agent die and lose everything.</p>
+
+  <h3>Moment three — the swarm</h3>
+  <p>Zoom out. Ten thousand dots, colour-coded by risk. Flip to <strong>agents off</strong> and watch the map bloom red as containers blow through free time and the counter runs. Flip back and watch interventions fire in waves, the map cool, the counter slow.</p>
+
+  <h3>In between</h3>
+  <p>Let one decision cross the spend threshold so the workflow parks and pings Slack. Approve it from your phone, on stage, and watch the workflow resume. Human-in-the-loop you can <em>see</em> beats any slide about governance.</p>
+  <p>And show the Auditor catching a non-compliant invoice — a missing certification field, worth the entire charge under 541.5. It takes eight seconds and it is the moment the business case stops being a projection.</p>
+
+  <h3>Close</h3>
+  <p>Thirty seconds of architecture, then the reframe: <em>we did not build a logistics app. We built a way to give agents a lifespan that matches the real world. Every container, every reefer, every aircraft component — anything that exists over weeks can now have a mind that persists over weeks.</em></p>
+</section>
+
+<section id="s21">
+  <div class="sec-head"><span class="idx">21</span><h2>Questions judges will ask</h2></div>
+
+  <h4>Why not a cron job and a queue?</h4>
+  <p>Because the process sleeps for days and must survive deploys, parks indefinitely on human approval, takes real actions that must be undone when customs intervenes an hour later, and must produce a permanent replayable record. Each is a distributed-systems project on its own.</p>
+
+  <h4>Why not LangGraph or a standard agent framework?</h4>
+  <p>Those manage reasoning within a session. Nothing here is within a session. The unit of work is 24 to 60 days and the agent is asleep for most of it. We use an LLM for reasoning and Temporal for lifespan.</p>
+
+  <h4>How do you keep the workflow deterministic with an LLM in it?</h4>
+  <p>We don't put the LLM in the workflow. Every model call is an activity, so its result is recorded in history and replayed rather than re-executed.</p>
+
+  <h4>Isn't this just an alerting tool?</h4>
+  <p>Alerting tells you the deadline is coming. This books the empty return, records the appointment failure as evidence, checks the invoice against federal requirements, and files the dispute inside the window. Two-thirds of the value in our worked example comes from actions, not notifications.</p>
+
+  <h4>Can an AI file a dispute? Is that legally sound?</h4>
+  <p>The agent assembles and drafts; a human submits above a threshold. Nothing changes who is legally responsible. The evidence chronology it produces is stronger than what a person assembles five weeks later, because it was captured contemporaneously.</p>
+
+  <h4>What happens when the agent is wrong?</h4>
+  <p>Spend caps bound the damage, compensation undoes side effects, and the counterfactual ledger surfaces the error rather than hiding it. Early deployment runs in shadow mode until calibration is demonstrated.</p>
+
+  <h4>Ten thousand concurrent workflows — does that scale?</h4>
+  <p>Workflows sleeping on timers consume no worker capacity. Concurrency is bounded by activity execution, not by how many agents are alive.</p>
+
+  <h4>How do you deploy new agent logic without breaking live containers?</h4>
+  <p>Temporal's versioning. Workflows in flight continue on the logic they started with; new ones pick up the new path.</p>
+
+  <h4>What is the hardest part you have not solved?</h4>
+  <p>Identity resolution across carrier, terminal and customs systems, and extracting free-time terms reliably from contracts written as prose. Both are tractable and both are honest answers.</p>
+</section>
+
+<section id="s22">
+  <div class="sec-head"><span class="idx">22</span><h2>Beyond the hackathon</h2></div>
+
+  <h3>Nearest adjacencies</h3>
+  <p>The same shape — a durable agent, a hard external deadline, evidence that decays — recurs across logistics.</p>
+  <ul>
+    <li><strong>Cargo claims and OS&amp;D.</strong> Damage found at delivery triggers a workflow that gathers photos and inspection reports, determines liability against carrier terms, files within the statutory notice window, and pursues recovery over months.</li>
+    <li><strong>Trade compliance.</strong> Classification, denied-party screening, and the long asynchronous loop with brokers and authorities. Here the audit trail is a regulatory requirement, not a nice-to-have.</li>
+    <li><strong>Cold chain intervention.</strong> A temperature excursion in transit; the agent computes remaining shelf life and chooses between reroute, re-ice, expedite or divert — with compensation if the reroute fails.</li>
+    <li><strong>Contract renewal intelligence.</strong> The learning store already knows which carriers' free time is nominally generous and effectively short at each port. That is direct procurement leverage. [23]</li>
+  </ul>
+
+  <h3>The general claim</h3>
+  <p>Persistent Fleet is a demurrage product, but the pattern is not about demurrage. It is <strong>one durable agent per physical object, for as long as that object exists in the world.</strong> Anything with a lifespan measured in weeks and a cost of inattention measured in dollars fits the same architecture: reefer containers, aircraft components under airworthiness deadlines, pharmaceutical shipments, construction equipment on hire.</p>
+  <p>That is the claim for the final slide. The demurrage case proves it with real money; the pattern is what generalises.</p>
+</section>
+
+<section id="s23">
+  <div class="sec-head"><span class="idx">23</span><h2>Sources</h2></div>
+
+  <p>All figures accessed August 2026. Regulatory citations are to 46 CFR Part 541 as in force following the September 2025 D.C. Circuit decision.</p>
+
+  <ol class="srclist">
+    <li>Federal Maritime Commission, <em>Detention and Demurrage</em> data page — $15.4bn collected by nine carriers Apr 2020–Mar 2025; billed/collected/waived index. <a href="https://www.fmc.gov/detention-and-demurrage/">https://www.fmc.gov/detention-and-demurrage/</a></li>
+    <li>Container xChange, <em>D&amp;D Charges Benchmark 2023</em> press release — US ports ranked most expensive; ~$2,008 average at 14 days. <a href="https://www.container-xchange.com/press-center/average-demurrage-and-detention-charges-witness-a-25-dip-globally-in-2023-7-u-s-ports-rank-highest/">container-xchange.com</a></li>
+    <li>Institute for Supply Management, coverage of the same benchmark. <a href="https://www.ismworld.org/supply-management-news-and-reports/news-publications/inside-supply-management-magazine/blog/2023/2023-07/demurrage-and-detention-charges-down-but-issues-remain-at-some-ports/">ismworld.org</a></li>
+    <li>Federal Register, <em>Demurrage and Detention Billing Requirements</em>, 89 FR 14330 (26 Feb 2024) — $8.9bn billed / $6.9bn collected, 2020–2022. <a href="https://www.federalregister.gov/documents/2024/02/26/2024-02926/demurrage-and-detention-billing-requirements">federalregister.gov</a></li>
+    <li>WarehousingCosts.com, <em>Port Drayage Costs 2026</em> — LA/LB free time 2–4 days; tiered demurrage $200–$500/day; chassis $35–$50/day. <a href="https://warehousingcosts.com/guides/port-drayage-costs">warehousingcosts.com</a></li>
+    <li>Blackbridge Logistics, <em>Drayage Cost Per Container 2026</em> — demurrage tier ranges. <a href="https://www.blackbridgelogistics.com/port-drayage-fees/">blackbridgelogistics.com</a></li>
+    <li>Unicargo, <em>How to Avoid Demurrage and Detention Fees</em> (2026) — 2025–26 rate ranges; preventable and disputable share. <a href="https://www.unicargo.com/how-to-avoid-demurrage-and-detention-fees/">unicargo.com</a></li>
+    <li>eCustomsClearing, <em>Shipment Customs Examination</em> — CET/CES process and importer-borne cost under 19 USC 1467 and 19 CFR 151.6. <a href="https://ecustomsclearing.com/shipment-customs-examination/">ecustomsclearing.com</a></li>
+    <li>FreightAmigo, <em>US Customs Holds and Exams</em> guides — exam durations of 5–14+ days; CET vs VACIS. <a href="https://www.freightamigo.com/en/blog/logistics/navigating-us-customs-holds-and-exams-a-comprehensive-guide/">freightamigo.com</a></li>
+    <li>Weber Logistics, <em>Detention Charges in Shipping</em> — per diem $125–$175/day; 24/7 appointment scanning practice. <a href="https://www.weberlogistics.com/blog/california-logistics-blog/detention-charges-in-shipping">weberlogistics.com</a></li>
+    <li>Precision Inc., <em>Same-Day Drayage at Port of Long Beach</em> — per-terminal storage tariffs; reefer premium. <a href="https://www.precisioninc.com/blog/same-day-drayage-long-beach-guide/">precisioninc.com</a></li>
+    <li>BookYourCargo, <em>LA/LB Drayage 2026</em> — PierPass TMF $77.56/FEU from 1 Aug 2025; Clean Truck Fund rate. <a href="https://bookyourcargo.com/blogs/port-of-los-angeles-and-long-beach-drayage-2026">bookyourcargo.com</a></li>
+    <li>Vizion, <em>Demurrage and Detention: What are the Differences?</em> — detention averages at 7 and 14 days. <a href="https://www.vizionapi.com/blog/defining-demurrage-and-detention-key-differences-and-implications">vizionapi.com</a></li>
+    <li>ShippingRates.org, <em>Demurrage &amp; Detention Guide 2026</em> — ~$22bn/yr global estimate. Treat as an estimate. <a href="https://shippingrates.org/blog/demurrage-detention-guide-2026">shippingrates.org</a></li>
+    <li>Federal Maritime Commission, <em>FMC Publishes Final Rule on Detention and Demurrage Billing Practices</em>. <a href="https://www.fmc.gov/articles/fmc-publishes-final-rule-on-detention-and-demurrage-billing-practices/">fmc.gov</a></li>
+    <li>Benesch, Friedlander, Coplan &amp; Aronoff, analysis of the final rule — 541.7(a) 30-day issuance deadline. <a href="https://www.beneschlaw.com/insight/a-whole-new-world-fmc-issues-final-rule-on-demurrage-and-detention-billing-requirements/">beneschlaw.com</a></li>
+    <li>Federal Maritime Commission, <em>U.S. Court of Appeals Issues Decision</em> (Sept 2025) — only 541.4 set aside. <a href="https://www.fmc.gov/articles/u-s-court-of-appeals-issues-decision-in-case-on-demurrage-and-detention-billing-practices/">fmc.gov</a></li>
+    <li>Auto Care Association, summary of FMC final rule provisions — NVOCC timing, 30-day dispute window. <a href="https://www.autocare.org/detail-pages/blog/gtsc/2024/03/04/federal-maritime-commission-announces-final-rule-on-demurrage-and-detention-billing-practices">autocare.org</a></li>
+    <li>Tradlinx, <em>A Practical Guide to Challenging US Demurrage and Detention Invoices</em> — 541.6 five content categories, ~20 items; certification clause. <a href="https://blogs.tradlinx.com/a-practical-guide-to-challenging-us-demurrage-and-detention-invoices/">blogs.tradlinx.com</a></li>
+    <li>eCFR, 46 CFR Part 541 — 541.5 omission voids obligation to pay; 541.6 contents of invoice. <a href="https://www.ecfr.gov/current/title-46/chapter-IV/subchapter-B/part-541">ecfr.gov</a></li>
+    <li>HFW, <em>FMC's New Demurrage and Detention Rules Effective May 2024</em> — required invoice fields including certification. <a href="https://www.hfw.com/insights/fmcs-new-demurrage-and-detention-regulations-become-effective-may-2024/">hfw.com</a></li>
+    <li>Gnosis Freight, <em>FMC Ruling on Demurrage and Detention Requirements</em> — Charge Complaint may be filed at any point. <a href="https://www.gnosisfreight.com/post/fmc-ruling-on-demurrage-and-detention-requirements">gnosisfreight.com</a></li>
+    <li>Tier2 Systems, <em>Demurrage and Detention: A Forwarder's Guide</em> — 400-container forwarder illustration; free time as a negotiable term. <a href="https://tier2systems.com/en/blog/demurrage-detention-management/">tier2systems.com</a></li>
+  </ol>
+
+  <div class="warn">
+    <span class="label">Before you submit</span>
+    <p>Rates and regulations move. Re-check the FMC data page and at least one 2026 rate source the week of judging, and replace the demo counters in section 18 with your own measured numbers once the synthetic fleet is running.</p>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

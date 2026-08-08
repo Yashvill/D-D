@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Persistent Fleet — Stakeholder Value &amp; Facilitator POC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EFF1EE; --paper-2:#E6E9E5;
+  --ink:#17242C; --ink-soft:#4A5A62;
+  --rule:#C3CAC6; --rule-soft:#D8DCD8;
+  --stamp:#A83B22; --stamp-bg:#F5E6E1;
+  --sea:#1D5B6E; --sea-bg:#E1EAEC;
+  --flag:#B0781F; --flag-bg:#F5EBD9;
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:960px;margin:0 auto;padding:0 32px 120px}
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.2;margin:0}
+p{margin:0 0 1.1em}
+code{font-family:var(--mono);font-size:.87em;background:var(--paper-2);padding:1px 5px;border-radius:2px}
+.label{font-family:var(--display);font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+
+.masthead{border-bottom:2px solid var(--ink);padding-top:40px;margin-bottom:8px}
+.masthead h1{font-size:48px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.masthead .sub{font-family:var(--display);font-size:19px;font-weight:400;color:var(--ink-soft);margin-bottom:26px}
+.fields{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule)}
+.field{padding:10px 14px 12px;border-right:1px solid var(--rule)}
+.field:last-child{border-right:none}
+.field .label{display:block;margin-bottom:3px}
+.field .val{font-family:var(--mono);font-size:13px;font-weight:500}
+
+section{margin-top:60px;scroll-margin-top:20px}
+.sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--ink);padding-bottom:8px;margin-bottom:22px}
+.sec-head .idx{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--stamp)}
+.sec-head h2{font-size:27px;letter-spacing:-.01em}
+h3{font-size:19px;margin:30px 0 10px}
+h4{font-size:15px;margin:20px 0 6px;font-weight:600}
+
+.toc{border:1px solid var(--rule);background:var(--paper-2);padding:20px 24px;margin-top:36px}
+.toc ol{margin:10px 0 0;padding-left:0;list-style:none;columns:2;column-gap:36px}
+.toc li{font-family:var(--display);font-size:14px;padding:3px 0;break-inside:avoid}
+.toc li a{text-decoration:none;color:var(--ink)}
+.toc li a:hover{color:var(--stamp)}
+.toc .n{font-family:var(--mono);font-size:11.5px;color:var(--stamp);margin-right:8px}
+
+.lede{font-size:20px;line-height:1.55;border-left:3px solid var(--stamp);padding-left:20px;margin-bottom:26px}
+
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:18px 0}
+th{font-family:var(--display);font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;text-align:left;padding:8px 10px;border-bottom:1.5px solid var(--ink);color:var(--ink-soft);vertical-align:bottom}
+td{padding:10px;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.45}
+td.mono,th.mono{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+td.r{text-align:right;font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+tr.tot td{border-top:1.5px solid var(--ink);border-bottom:none;font-weight:600;background:var(--paper-2)}
+.bad{color:var(--stamp)} .good{color:var(--sea)} .mute{color:var(--ink-soft)}
+
+/* stakeholder panels */
+.who{border:1px solid var(--rule);background:#fff;margin:26px 0}
+.who-head{display:flex;align-items:baseline;gap:14px;padding:13px 20px;border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.who-head .r{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--sea);white-space:nowrap}
+.who-head h3{margin:0;font-size:20px;flex:1}
+.who-head .v{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--sea);white-space:nowrap}
+.who-body{padding:16px 20px 18px}
+.who-body p{font-size:16px}
+.who-body p:last-child{margin-bottom:0}
+.who-body table{margin-bottom:6px}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--rule);margin:24px 0;background:#fff}
+.split > div{padding:18px 20px;border-right:1px solid var(--rule)}
+.split > div:last-child{border-right:none}
+.split h4{margin:0 0 8px;font-size:16px}
+.split .tag{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:6px}
+.split .al{color:var(--sea)} .split .zs{color:var(--stamp)}
+.split p{font-size:15.5px;margin-bottom:.7em}
+.split p:last-child{margin-bottom:0}
+
+.note{border:1px solid var(--sea);background:var(--sea-bg);padding:15px 19px;margin:20px 0;font-size:16px}
+.note .label{color:var(--sea);display:block;margin-bottom:5px}
+.warn{border:1px solid var(--flag);background:var(--flag-bg);padding:15px 19px;margin:20px 0;font-size:16px}
+.warn .label{color:var(--flag);display:block;margin-bottom:5px}
+.note p:last-child,.warn p:last-child{margin-bottom:0}
+
+figure{margin:28px 0;border:1px solid var(--rule);background:#fff;padding:22px 20px 14px}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:var(--display);font-size:12px;color:var(--ink-soft);border-top:1px solid var(--rule-soft);padding-top:9px;margin-top:14px}
+figcaption b{font-weight:600;color:var(--ink)}
+
+ul,ol{margin:0 0 1.1em;padding-left:22px}
+li{margin-bottom:.4em}
+
+.strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);margin:24px 0;background:#fff}
+.strip div{padding:14px 16px;border-right:1px solid var(--rule)}
+.strip div:last-child{border-right:none}
+.strip .v{font-family:var(--mono);font-size:21px;font-weight:600;display:block;margin-top:3px}
+.strip .r{color:var(--stamp)} .strip .g{color:var(--sea)}
+
+@media(max-width:820px){
+  .wrap{padding:0 18px 80px}
+  .masthead h1{font-size:32px}
+  .fields,.strip{grid-template-columns:1fr 1fr}
+  .field,.strip div{border-bottom:1px solid var(--rule)}
+  .toc ol{columns:1}
+  .split{grid-template-columns:1fr}
+  .split > div{border-right:none;border-bottom:1px solid var(--rule)}
+  .who-head{flex-wrap:wrap;gap:8px}
+  table{font-size:13px} td,th{padding:7px 6px}
+}
+@media print{body{background:#fff} figure,.who,.note,.warn,.split{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <h1>Who Wins, and How</h1>
+  <div class="sub">Stakeholder value across the chain — and the facilitator's proof of concept</div>
+  <div class="fields">
+    <div class="field"><span class="label">Document</span><span class="val">PF-004 · Rev A</span></div>
+    <div class="field"><span class="label">Owner</span><span class="val">Forwarder / NVOCC</span></div>
+    <div class="field"><span class="label">Parties covered</span><span class="val">5</span></div>
+    <div class="field"><span class="label">POC scope</span><span class="val">90 days, one lane</span></div>
+  </div>
+</header>
+
+<div class="toc">
+  <span class="label">Contents</span>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>Executive summary</a></li>
+    <li><a href="#s2"><span class="n">02</span>The stakeholder map</a></li>
+    <li><a href="#s3"><span class="n">03</span>Why the facilitator owns it</a></li>
+    <li><a href="#s4"><span class="n">04</span>The value split</a></li>
+    <li><a href="#s5"><span class="n">05</span>The customer — importer</a></li>
+    <li><a href="#s6"><span class="n">06</span>The carrier</a></li>
+    <li><a href="#s7"><span class="n">07</span>The terminal and port</a></li>
+    <li><a href="#s8"><span class="n">08</span>The drayage carrier</a></li>
+    <li><a href="#s9"><span class="n">09</span>The facilitator — owner</a></li>
+    <li><a href="#s10"><span class="n">10</span>Where interests genuinely conflict</a></li>
+    <li><a href="#s11"><span class="n">11</span>Financial summary, all parties</a></li>
+    <li><a href="#s12"><span class="n">12</span>Process improvements, all parties</a></li>
+    <li><a href="#s13"><span class="n">13</span>Commercial model</a></li>
+    <li><a href="#s14"><span class="n">14</span>The POC</a></li>
+    <li><a href="#s15"><span class="n">15</span>Objections, by stakeholder</a></li>
+    <li><a href="#s16"><span class="n">16</span>Metrics, by stakeholder</a></li>
+  </ol>
+</div>
+
+<section id="s1">
+  <div class="sec-head"><span class="idx">01</span><h2>Executive summary</h2></div>
+
+  <p class="lede">The obvious reading of this project is that importers win and carriers lose. That reading is wrong, and getting it right is what makes the product sellable rather than merely clever.</p>
+
+  <p>Demurrage and detention exist to do one thing: get containers moving and equipment back in circulation. When our agent returns an empty container eight days earlier than the unmanaged process would have, the carrier gets exactly what the charge was designed to buy. It loses the penalty and gains the asset. <strong>Prevention is aligned with the party charging for it.</strong></p>
+
+  <p>The dispute half is genuinely adversarial, but narrowly so. What gets contested are charges that are either non-compliant with federal invoice requirements or caused by the billing party's own performance failure. Carriers already concede roughly a fifth of what they bill. Structured, cited claims are cheaper for them to adjudicate than the vague, angry, evidence-free emails they get today.</p>
+
+  <p>The owner of the process is the <strong>facilitator — the freight forwarder or NVOCC</strong>. They sit at the only point in the chain where the contract, the event feed, the terminal login, the drayage relationship and the invoice all pass through the same hands. They also feel the pain first, because carriers debit their account before they have collected from the shipper.</p>
+
+  <div class="strip">
+    <div><span class="label">Importer, per container</span><span class="v g">−$3,690 cost</span></div>
+    <div><span class="label">Carrier, per container</span><span class="v g">+8 asset days</span></div>
+    <div><span class="label">Terminal</span><span class="v g">fewer no-shows</span></div>
+    <div><span class="label">Facilitator, annual</span><span class="v g">≈ $840k</span></div>
+  </div>
+
+  <p>This document takes each party in turn — what improves in their process, what improves in their finances, and where the interests genuinely collide. Section 10 is the honest one; read it before you pitch to anyone in a shipping line.</p>
+</section>
+
+<section id="s2">
+  <div class="sec-head"><span class="idx">02</span><h2>The stakeholder map</h2></div>
+
+  <p>Five parties, two kinds of flow. Money runs along contracts; data runs along operations. They do not follow the same paths, and that mismatch is the whole problem.</p>
+
+  <figure>
+  <svg viewBox="0 0 840 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stakeholder map. The facilitator sits at the centre, connected by money and data flows to the importer on the left and to the carrier, terminal and drayage carrier on the right.">
+    <defs>
+      <marker id="m1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"/></marker>
+    </defs>
+
+    <rect x="325" y="175" width="190" height="80" fill="#E1EAEC" stroke="#1D5B6E" stroke-width="2"/>
+    <text x="420" y="203" font-family="Archivo,sans-serif" font-size="16" font-weight="700" fill="#17242C" text-anchor="middle">Facilitator</text>
+    <text x="420" y="221" font-family="Archivo,sans-serif" font-size="12" fill="#1D5B6E" text-anchor="middle">Forwarder / NVOCC</text>
+    <text x="420" y="240" font-family="IBM Plex Mono,monospace" font-size="11" fill="#1D5B6E" text-anchor="middle">owns the agents</text>
+
+    <rect x="40" y="180" width="180" height="70" fill="#E6E9E5" stroke="#4A5A62" stroke-width="1"/>
+    <text x="130" y="206" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Importer</text>
+    <text x="130" y="226" font-family="Archivo,sans-serif" font-size="11.5" fill="#4A5A62" text-anchor="middle">pays the landed cost</text>
+
+    <rect x="620" y="40" width="180" height="70" fill="#F5E6E1" stroke="#A83B22" stroke-width="1"/>
+    <text x="710" y="66" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Carrier</text>
+    <text x="710" y="86" font-family="Archivo,sans-serif" font-size="11.5" fill="#A83B22" text-anchor="middle">owns box, bills D&amp;D</text>
+
+    <rect x="620" y="180" width="180" height="70" fill="#F5EBD9" stroke="#B0781F" stroke-width="1"/>
+    <text x="710" y="206" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Terminal</text>
+    <text x="710" y="226" font-family="Archivo,sans-serif" font-size="11.5" fill="#B0781F" text-anchor="middle">owns yard and slots</text>
+
+    <rect x="620" y="320" width="180" height="70" fill="#E6E9E5" stroke="#4A5A62" stroke-width="1"/>
+    <text x="710" y="346" font-family="Archivo,sans-serif" font-size="15" font-weight="600" fill="#17242C" text-anchor="middle">Drayage carrier</text>
+    <text x="710" y="366" font-family="Archivo,sans-serif" font-size="11.5" fill="#4A5A62" text-anchor="middle">moves the box</text>
+
+    <line x1="220" y1="203" x2="317" y2="203" stroke="#A83B22" stroke-width="2" marker-end="url(#m1)"/>
+    <line x1="317" y1="228" x2="220" y2="228" stroke="#1D5B6E" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#m1)"/>
+    <text x="268" y="196" font-family="Archivo,sans-serif" font-size="10.5" fill="#A83B22" text-anchor="middle">re-billed charges</text>
+    <text x="268" y="248" font-family="Archivo,sans-serif" font-size="10.5" fill="#1D5B6E" text-anchor="middle">visibility, ledger</text>
+
+    <path d="M515 190 L560 190 L560 75 L612 75" fill="none" stroke="#A83B22" stroke-width="2" marker-end="url(#m1)"/>
+    <path d="M612 95 L578 95 L578 210 L523 210" fill="none" stroke="#1D5B6E" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#m1)"/>
+    <text x="560" y="66" font-family="Archivo,sans-serif" font-size="10.5" fill="#A83B22" text-anchor="middle">D&amp;D invoices, disputes</text>
+
+    <line x1="515" y1="205" x2="612" y2="205" stroke="#A83B22" stroke-width="2" marker-end="url(#m1)"/>
+    <line x1="612" y1="228" x2="515" y2="228" stroke="#1D5B6E" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#m1)"/>
+    <text x="563" y="199" font-family="Archivo,sans-serif" font-size="10.5" fill="#A83B22" text-anchor="middle">storage, appointments</text>
+    <text x="563" y="245" font-family="Archivo,sans-serif" font-size="10.5" fill="#1D5B6E" text-anchor="middle">slot availability</text>
+
+    <path d="M515 240 L560 240 L560 355 L612 355" fill="none" stroke="#A83B22" stroke-width="2" marker-end="url(#m1)"/>
+    <path d="M612 375 L578 375 L578 250 L505 250" fill="none" stroke="#1D5B6E" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#m1)"/>
+    <text x="560" y="404" font-family="Archivo,sans-serif" font-size="10.5" fill="#A83B22" text-anchor="middle">bookings, empty returns</text>
+
+    <line x1="40" y1="410" x2="66" y2="410" stroke="#A83B22" stroke-width="2"/>
+    <text x="74" y="414" font-family="Archivo,sans-serif" font-size="12" fill="#4A5A62">money and instructions</text>
+    <line x1="230" y1="410" x2="256" y2="410" stroke="#1D5B6E" stroke-width="1.5" stroke-dasharray="5 3"/>
+    <text x="264" y="414" font-family="Archivo,sans-serif" font-size="12" fill="#4A5A62">data and events</text>
+  </svg>
+  <figcaption><b>Figure 1.</b> Every flow passes through the facilitator. That is why they can own the process — and why nobody else in the chain can.</figcaption>
+  </figure>
+
+  <h3>What each party controls</h3>
+  <table>
+    <tr><th>Party</th><th>Controls</th><th>Cannot see</th><th>Bears the cost of</th></tr>
+    <tr><td><strong>Importer</strong></td><td>Warehouse receiving, purchase timing, Incoterms</td><td>Terminal state, appointment supply, carrier advisories</td><td>Everything, eventually</td></tr>
+    <tr><td><strong>Facilitator</strong></td><td>Drayage, appointments, empty returns, disputes, the contract</td><td>Customs targeting decisions</td><td>Charges before they are recovered from the shipper</td></tr>
+    <tr><td><strong>Carrier</strong></td><td>Free time, tier tables, return depots, restrictions</td><td>The importer's warehouse capacity</td><td>Equipment idling and dispute handling</td></tr>
+    <tr><td><strong>Terminal</strong></td><td>Grounding, appointment supply, storage tariff</td><td>Which boxes are urgent to whom</td><td>Yard congestion and no-shows</td></tr>
+    <tr><td><strong>Drayage carrier</strong></td><td>Truck and chassis capacity, execution</td><td>Free-time clocks, return restrictions</td><td>Wasted trips and driver hours</td></tr>
+  </table>
+
+  <p>Read the third column. <strong>Every party is blind to the thing that causes their own cost.</strong> The agent's real function is not automation — it is putting one memory in the middle of five partial views.</p>
+</section>
+
+<section id="s3">
+  <div class="sec-head"><span class="idx">03</span><h2>Why the facilitator owns it</h2></div>
+
+  <p>Five candidates could own this process. Only one has all four properties that matter.</p>
+
+  <table>
+    <tr><th>Owner</th><th>Feels the pain</th><th>Holds the data</th><th>Can act</th><th>Has volume</th><th>Verdict</th></tr>
+    <tr><td><strong>Facilitator</strong></td><td class="good">Yes, first</td><td class="good">All of it</td><td class="good">Daily</td><td class="good">Thousands</td><td class="good"><strong>Owner</strong></td></tr>
+    <tr><td>Importer / BCO</td><td class="good">Yes</td><td>Fragments</td><td>Slowly</td><td>Hundreds</td><td>Buyer, weak operator</td></tr>
+    <tr><td>Drayage carrier</td><td>Some</td><td>Terminal side only</td><td class="good">Yes</td><td class="good">High</td><td>No invoice access</td></tr>
+    <tr><td>Carrier / terminal</td><td class="bad">No — earns it</td><td class="good">Yes</td><td class="good">Yes</td><td class="good">Very high</td><td>Different product</td></tr>
+    <tr><td>Standalone SaaS</td><td class="bad">No</td><td class="bad">No</td><td class="bad">No</td><td>—</td><td>Sells to the above</td></tr>
+  </table>
+
+  <h3>The four reasons</h3>
+
+  <p><strong>They feel it first, and in cash.</strong> Carriers debit D&amp;D from the facilitator's account before the facilitator has collected from the shipper. On a high-volume lane this opens a working-capital gap that compounds month over month. Pain that hits cash gets budget faster than pain that hits the profit line at quarter end.</p>
+
+  <p><strong>They hold every input.</strong> The service contract, the EDI feed, the terminal portal credentials, the drayage relationship, the customs broker thread, and the invoice — all of it passes through the same organisation. The importer holds fragments. The trucker holds a slice.</p>
+
+  <p><strong>Volume makes the agent worth building.</strong> One facilitator integration covers thousands of containers a year across dozens of shippers. One importer integration covers hundreds.</p>
+
+  <p><strong>They already own the operational muscle.</strong> Ops staff, dispatcher relationships, portal logins, a dispute process however threadbare. You are upgrading a function that exists rather than creating one from nothing.</p>
+
+  <div class="note">
+    <span class="label">The regulatory fit</span>
+    <p>US rules give NVOCCs their own timing regime and an explicit mechanism to pass a customer's dispute upstream, with additional time granted for doing so. The intermediary role your facilitator plays is written into the regulation. That is unusual, and it is worth a slide.</p>
+  </div>
+
+  <h3>Internal ownership inside the facilitator</h3>
+  <table>
+    <tr><th>Role</th><th>Owns</th><th>Metric</th></tr>
+    <tr><td>Ops manager / control-tower lead</td><td>Spend caps, escalation queue, intervention policy</td><td>Charges prevented, intervention precision</td></tr>
+    <tr><td>Finance / controller</td><td>Invoice audit, dispute mandate, settlement band</td><td>Charges recovered, invoice compliance rate</td></tr>
+    <tr><td>Account management</td><td>The shipper-facing ledger and quarterly review</td><td>Retention, share of wallet</td></tr>
+    <tr><td>Engineering</td><td>Workers, integrations, uptime</td><td>Evidence completeness, event lag</td></tr>
+  </table>
+  <p>Note what engineering does <em>not</em> own: policy. The person approving a $340 expedite is the same person who would approve it today — just with better information and less time pressure.</p>
+</section>
+
+<section id="s4">
+  <div class="sec-head"><span class="idx">04</span><h2>The value split</h2></div>
+
+  <p>Everything in this document depends on one distinction. Say it early and say it clearly, because it is what stops the project being read as an attack on carriers.</p>
+
+  <div class="split">
+    <div>
+      <span class="tag al">Half one — aligned</span>
+      <h4>Prevention</h4>
+      <p>The agent moves the box faster and returns the equipment sooner. The carrier loses a penalty it never wanted to earn and gains an asset it did want back. The terminal frees a slot. The importer pays less.</p>
+      <p><strong>Nobody loses anything they were trying to keep.</strong> This half is roughly 35–40% of the value and it is entirely non-adversarial.</p>
+    </div>
+    <div>
+      <span class="tag zs">Half two — contested</span>
+      <h4>Audit and dispute</h4>
+      <p>The agent contests charges that are non-compliant with invoice rules, or caused by the billing party's own performance. Money moves from carrier to shipper.</p>
+      <p>This half is adversarial — but it is narrow, evidence-based, and it uses a federal mechanism built for exactly this. Carriers already waive about a fifth of billings; the fight is over whether a claim gets made, not whether the system permits it.</p>
+    </div>
+  </div>
+
+  <p>The practical consequence: <strong>sell the halves separately.</strong> Prevention is an operational service the facilitator markets to shippers and can discuss openly with carriers. Audit and dispute is a financial recovery function that lives with the controller. Some organisations will buy one and not the other, and the architecture supports either alone.</p>
+
+  <p>It also changes how you present the project. "We reduce penalty spend by making the supply chain do what the penalty was designed to encourage" is a sentence you can say in a room containing a carrier representative. "We help importers fight carriers" is not.</p>
+</section>
+
+<section id="s5">
+  <div class="sec-head"><span class="idx">05</span><h2>The customer — importer</h2></div>
+
+  <div class="who">
+    <div class="who-head"><span class="r">Pays for everything</span><h3>Importer / beneficial cargo owner</h3><span class="v">−$3,690 per affected box</span></div>
+    <div class="who-body">
+      <p>The importer's problem is not that D&amp;D is expensive. It is that D&amp;D is <em>unpredictable</em>. A charge that arrives five weeks late, for a delay nobody can explain, on a container that was already written off as delivered, is impossible to plan around and impossible to argue with.</p>
+
+      <h4>Process improvements</h4>
+      <table>
+        <tr><th>Today</th><th>With the agent</th></tr>
+        <tr><td>Learns about a charge when the invoice arrives, five weeks late</td><td>Sees projected exposure on day 5, while it can still be acted on</td></tr>
+        <tr><td>Cannot explain why a charge happened</td><td>Receives a cited chronology naming the cause of every billed day</td></tr>
+        <tr><td>Month-end accruals are guesswork</td><td>Live exposure per container feeds a real accrual figure</td></tr>
+        <tr><td>Negotiates free time on gut feel at renewal</td><td>Walks into renewal with nominal-versus-effective free time by carrier and port</td></tr>
+        <tr><td>Containers arrive when they arrive</td><td>Faster average gate-out and empty return means tighter inbound planning</td></tr>
+      </table>
+
+      <h4>Financial improvements</h4>
+      <table>
+        <tr><th>Line</th><th class="r">Per container</th><th>Mechanism</th></tr>
+        <tr><td>Detention and chassis avoided</td><td class="r good">$1,485</td><td>Empty returned inside free time; no dispute risk</td></tr>
+        <tr><td>Demurrage and storage recovered</td><td class="r good">$2,205</td><td>Disputed with contemporaneous evidence, at a 70% win rate</td></tr>
+        <tr class="tot"><td>Net landed-cost reduction</td><td class="r good">$3,690</td><td>on an affected container</td></tr>
+      </table>
+
+      <p><strong>The under-rated benefit is the accrual.</strong> Finance teams currently carry an unquantified liability for six weeks. Live exposure per container turns a surprise into a number, and a number into a budget line. Several controllers will value that more than the savings.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s6">
+  <div class="sec-head"><span class="idx">06</span><h2>The carrier</h2></div>
+
+  <div class="who">
+    <div class="who-head"><span class="r">Loses penalty, gains asset</span><h3>Ocean carrier / steamship line</h3><span class="v">+8 equipment days</span></div>
+    <div class="who-body">
+      <p>This is the section that decides whether the project reads as adversarial. Take it slowly.</p>
+
+      <p>A container earns money only while it is moving. The stated purpose of demurrage and detention is to get boxes out of terminals and equipment back into circulation. In our worked example the agent returns the empty on day 23 instead of day 31 — <strong>eight days of a capital asset put back into service that the carrier would otherwise have spent chasing.</strong></p>
+
+      <p>The carrier loses $1,485 it did not want to earn, and gains eight days of the thing it actually wanted. Across a fleet that is a container-turn improvement, and container turns are how liner economics work.</p>
+
+      <h4>Process improvements</h4>
+      <table>
+        <tr><th>Today</th><th>With the agent on the other side</th></tr>
+        <tr><td>Disputes arrive as unstructured email with no evidence</td><td>Structured claims with cited source documents and a specific defect named</td></tr>
+        <tr><td>Adjudication requires staff to reconstruct the story</td><td>The story arrives assembled; the decision is faster and cheaper</td></tr>
+        <tr><td>Equipment position unpredictable at the tail</td><td>Empty returns cluster inside free time, improving depot planning</td></tr>
+        <tr><td>Invoice defects surface as complaints and escalations</td><td>Defects surface early, in a normal dispute channel</td></tr>
+        <tr><td>Repeated friction with the same accounts</td><td>Fewer surprise charges means fewer relationship escalations</td></tr>
+      </table>
+
+      <h4>Financial improvements</h4>
+      <table>
+        <tr><th>Line</th><th>Direction</th><th>Mechanism</th></tr>
+        <tr><td>Penalty revenue</td><td class="bad">Down</td><td>Prevented charges are lost revenue — state this plainly</td></tr>
+        <tr><td>Equipment utilisation</td><td class="good">Up</td><td>Eight days per prevented container returned to circulation</td></tr>
+        <tr><td>Cost to serve a dispute</td><td class="good">Down</td><td>Cited claims are cheaper to adjudicate than reconstructed ones</td></tr>
+        <tr><td>Bad debt and write-off</td><td class="good">Down</td><td>Charges that stick are charges that were properly billed</td></tr>
+        <tr><td>Regulatory exposure</td><td class="good">Down</td><td>Fewer formal complaints; defects caught in the private channel first</td></tr>
+        <tr><td>Customer retention</td><td class="good">Up</td><td>Predictable billing is a competitive attribute, not a concession</td></tr>
+      </table>
+
+      <div class="note">
+        <span class="label">The line to use with a carrier</span>
+        <p>"Your penalty exists to make us move faster. We are going to move faster. You will bill us less and get your boxes back sooner — and when we do dispute, you will get a document instead of an argument."</p>
+      </div>
+
+      <p>There is a further reframe worth one line on the roadmap: <strong>the same system sold to a carrier reduces its dispute-handling cost and improves its container turns.</strong> Prevention is a service the party currently charging for it could plausibly buy.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s7">
+  <div class="sec-head"><span class="idx">07</span><h2>The terminal and port</h2></div>
+
+  <div class="who">
+    <div class="who-head"><span class="r">Loses storage, gains fluidity</span><h3>Marine terminal operator</h3><span class="v">no-shows down</span></div>
+    <div class="who-body">
+      <p>The terminal's scarce resource is not money, it is space and slots. Storage revenue is a by-product of congestion, and congestion is the thing that degrades every other move in the yard.</p>
+
+      <p>The strongest terminal benefit here is specific and often overlooked: <strong>appointment no-shows.</strong> Human dispatchers book defensively — grabbing slots they may not be able to use, because slots are scarce and holding one costs nothing. Every unused slot is capacity destroyed on a day when capacity was rationed.</p>
+
+      <p>Our agent cannot do that. The saga pattern requires a compensating action for every booking, so a slot the agent cannot use is released automatically rather than abandoned. That is a direct, mechanical improvement to the terminal's effective capacity, and it comes for free out of a design decision made for a completely different reason.</p>
+
+      <h4>Process improvements</h4>
+      <table>
+        <tr><th>Today</th><th>With the agent</th></tr>
+        <tr><td>Defensive booking; slots held and abandoned</td><td>Slots released automatically when the move cannot proceed</td></tr>
+        <tr><td>Demand signal is noisy — bookings do not predict arrivals</td><td>Bookings correlate with actual intent to move</td></tr>
+        <tr><td>Long-dwell containers discovered late</td><td>Urgency ranked and visible; the expensive boxes move first</td></tr>
+        <tr><td>Grounding delays invisible to the customer, so never fixed</td><td>Measured and reported — a feedback loop that did not exist</td></tr>
+        <tr><td>Peak-hour crush</td><td>Continuous scanning shifts collection into off-peak windows</td></tr>
+      </table>
+
+      <h4>Financial improvements</h4>
+      <table>
+        <tr><th>Line</th><th>Direction</th><th>Mechanism</th></tr>
+        <tr><td>Storage revenue</td><td class="bad">Down</td><td>Shorter dwell on managed containers</td></tr>
+        <tr><td>Effective slot capacity</td><td class="good">Up</td><td>Fewer no-shows; released slots recirculate</td></tr>
+        <tr><td>Yard productivity</td><td class="good">Up</td><td>Fewer long-dwell boxes blocking stacks</td></tr>
+        <tr><td>Gate throughput per shift</td><td class="good">Up</td><td>Demand smoothed away from peak windows</td></tr>
+        <tr><td>Disputes over storage tariffs</td><td class="good">Down</td><td>Charges that stick are charges computed correctly</td></tr>
+      </table>
+
+      <p>The port authority, one level up, cares about none of the revenue and all of the fluidity. Dwell time is a headline performance metric for a port complex, and this reduces it. That makes the port the easiest stakeholder in the entire chain to win over.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s8">
+  <div class="sec-head"><span class="idx">08</span><h2>The drayage carrier</h2></div>
+
+  <div class="who">
+    <div class="who-head"><span class="r">Pure upside</span><h3>Drayage / trucking provider</h3><span class="v">wasted trips eliminated</span></div>
+    <div class="who-body">
+      <p>The drayage carrier is the party that loses most and complains least, because they are the ones physically absorbing everyone else's information failure. They drive to a depot that will not accept the box. They hold a chassis they cannot release. They burn driver hours in a queue for an appointment that was never going to work.</p>
+
+      <p>They also have no visibility into any of the clocks. Nobody tells a trucker that a container is two days from the top tier, or that a return restriction was announced yesterday.</p>
+
+      <h4>Process improvements</h4>
+      <table>
+        <tr><th>Today</th><th>With the agent</th></tr>
+        <tr><td>Drives to a depot under an unread return restriction</td><td>Advisory matched to the depot before dispatch; trip not made</td></tr>
+        <tr><td>Books appointments manually during peak release windows</td><td>Slot secured by continuous scanning, often off-peak</td></tr>
+        <tr><td>No-show fees when a booked move falls through</td><td>Compensating cancellation releases the slot cleanly</td></tr>
+        <tr><td>Chassis held indefinitely on a stranded empty</td><td>Return booked early; chassis released with the box</td></tr>
+        <tr><td>No idea which containers are urgent</td><td>Ranked work: the $450-a-day box goes first</td></tr>
+      </table>
+
+      <h4>Financial improvements</h4>
+      <p>Wasted trips eliminated, no-show fees avoided, chassis per diem shortened, and driver hours redirected to revenue moves. There is no offsetting loss anywhere in their P&amp;L — this is the one party in the chain for whom the project is unambiguously positive.</p>
+
+      <p>Worth noting commercially: a facilitator whose agents give truckers ranked, pre-booked, non-wasted work becomes a preferred customer in a capacity-constrained market. That is a real operational advantage in a tight drayage market, and it costs nothing to provide.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s9">
+  <div class="sec-head"><span class="idx">09</span><h2>The facilitator — owner</h2></div>
+
+  <div class="who">
+    <div class="who-head"><span class="r">Owns the process</span><h3>Freight forwarder / NVOCC</h3><span class="v">≈ $840k / year</span></div>
+    <div class="who-body">
+      <p>The facilitator captures value in four distinct ways, and only the first is the obvious one.</p>
+
+      <h4>1. Direct recovery and prevention</h4>
+      <p>Modelled on a facilitator handling 400 containers a month, close to the published mid-size profile.</p>
+      <table>
+        <tr><th>Assumption</th><th class="r">Value</th><th>Basis</th></tr>
+        <tr><td>Annual containers</td><td class="r">4,800</td><td>400/month</td></tr>
+        <tr><td>Share incurring D&amp;D</td><td class="r">15%</td><td>Assumption — tune per lane</td></tr>
+        <tr><td>Affected containers</td><td class="r">720</td><td>Derived</td></tr>
+        <tr><td>Average charge</td><td class="r">$2,000</td><td>Near the US-port fourteen-day benchmark</td></tr>
+        <tr class="tot"><td>Annual exposure</td><td class="r bad">$1,440,000</td><td></td></tr>
+        <tr><td>Prevented (35%)</td><td class="r good">$504,000</td><td>Empty returns, early appointments, off-dock moves</td></tr>
+        <tr><td>Contestable share of remainder (55%)</td><td class="r">$514,800</td><td>Evidence-backed claims</td></tr>
+        <tr><td>Recovered at 65% win rate</td><td class="r good">$334,620</td><td></td></tr>
+        <tr class="tot"><td>Annual benefit</td><td class="r good">≈ $840,000</td><td>58% of exposure</td></tr>
+      </table>
+
+      <h4>2. Working capital</h4>
+      <p>Carriers debit D&amp;D before the facilitator collects from the shipper. Every prevented charge is a debit that never happens, and every recovery closes an open gap. On a high-volume lane this is the difference between funding someone else's penalty and not — and it is the argument that gets a CFO's attention faster than the savings figure.</p>
+
+      <h4>3. Differentiation and retention</h4>
+      <p>A facilitator who can show a shipper "we prevented $18,000 and recovered $9,000 for you this quarter, here is the container-by-container ledger" has a retention weapon that competitors cannot match with a rate card. D&amp;D management moves from a hidden cost the forwarder absorbs to a visible service they sell.</p>
+
+      <h4>4. Operating leverage</h4>
+      <p>The ops team currently spends roughly two hours per affected container on reconciliation and dispute assembly — around 1,440 hours a year at this volume. The agent does not replace the ops team; it removes the archaeology, so the same headcount handles more containers and spends its time on exceptions rather than reconstruction.</p>
+
+      <h4>5. Procurement leverage at renewal</h4>
+      <p>After two quarters the learning store knows each carrier's nominal free time versus its effective free time at each port. Free time is a negotiable contract term, and on a high-volume lane two extra days can be worth more than a rate reduction. That is a permanent structural gain that outlasts the software.</p>
+
+      <div class="warn">
+        <span class="label">The obligation that comes with ownership</span>
+        <p>The facilitator is both billed party and billing party. Recoveries must be visible to the shipper, or the retention weapon becomes a liability. Section 13 sets out three defensible models — pick one and publish it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="s10">
+  <div class="sec-head"><span class="idx">10</span><h2>Where interests genuinely conflict</h2></div>
+
+  <p>Read this section before pitching to anyone in a shipping line. A pitch that pretends everybody wins equally is not credible, and a judge will find the seam faster than you can paper over it.</p>
+
+  <h3>1. Carriers lose penalty revenue. Full stop.</h3>
+  <p>D&amp;D is roughly $3 billion a year from nine carriers in US trades alone. Prevention removes revenue they currently book. There is no version of this where that is not true.</p>
+  <p><strong>What is true alongside it:</strong> the revenue is a penalty, not a service line, and it is revenue they publicly justify as an incentive rather than a profit centre. Taking a company at its word is a defensible position.</p>
+
+  <h3>2. Terminals lose storage revenue</h3>
+  <p>Same structure, smaller number, and offset more cleanly by capacity gains — a terminal that runs at capacity converts freed slots into throughput. Port authorities, who measure dwell rather than storage revenue, are net winners.</p>
+
+  <h3>3. Systemic repricing</h3>
+  <p>If everybody adopted this, D&amp;D revenue would fall and carriers would recover it in base freight. That is probably correct, and it should be said out loud.</p>
+  <p>The counter is not that the money disappears — it is that the money becomes <strong>a negotiated, predictable rate instead of an unpredictable penalty landing five weeks late on a delay you did not cause.</strong> That is a better market for planning, budgeting and cash management even if the total is unchanged.</p>
+
+  <h3>4. Data access</h3>
+  <p>The genuine operational risk. A carrier or terminal could restrict portal or API access to a tool it sees as adversarial.</p>
+  <p>The mitigation is structural: almost everything the agent needs is data the facilitator already owns or is entitled to receive — their own service contract, EDI messages already flowing to them, gate receipts and EIRs from their own truckers, and the invoices themselves. <strong>You do not need carrier goodwill to audit an invoice.</strong> Prevention benefits from good access; audit does not require it.</p>
+
+  <h3>5. Contract repricing at renewal</h3>
+  <p>Carriers can shorten free time or tighten dispute language for accounts that dispute heavily. Real, and worth naming before a judge does. The counter is that the learning store gives the facilitator better renewal data than they have ever had — and free time that is nominally four days but effectively two is a fact worth knowing at the table regardless of who is disputing what.</p>
+
+  <div class="note">
+    <span class="label">The framing that survives a hostile room</span>
+    <p>Never "beat the carriers." Always: <strong>pay what you owe, not what you don't.</strong> Prevent the charges that should not happen, pay the ones you earned, contest the ones that are non-compliant or caused by the biller. Every clause of that is defensible in front of a shipping line.</p>
+  </div>
+</section>
+
+<section id="s11">
+  <div class="sec-head"><span class="idx">11</span><h2>Financial summary, all parties</h2></div>
+
+  <h3>Per container — the worked example</h3>
+  <table>
+    <tr><th>Party</th><th class="r">Direct P&amp;L</th><th>Offsetting gain</th><th class="r">Net view</th></tr>
+    <tr><td><strong>Importer</strong></td><td class="r good">+$3,690</td><td>Predictable accruals; faster inbound</td><td class="r good">Clear win</td></tr>
+    <tr><td><strong>Facilitator</strong></td><td class="r good">fee + closed cash gap</td><td>Retention, operating leverage, renewal data</td><td class="r good">Clear win</td></tr>
+    <tr><td><strong>Carrier</strong></td><td class="r bad">−$1,485 penalty</td><td>8 equipment days recovered; cheaper dispute handling; less write-off</td><td class="r mute">Mixed, arguably positive</td></tr>
+    <tr><td><strong>Terminal</strong></td><td class="r bad">−$975 storage</td><td>Slot released rather than no-showed; shorter dwell</td><td class="r mute">Mixed</td></tr>
+    <tr><td><strong>Drayage carrier</strong></td><td class="r good">wasted trips avoided</td><td>Chassis released sooner; ranked work</td><td class="r good">Clear win</td></tr>
+    <tr><td><strong>Port authority</strong></td><td class="r">no direct revenue</td><td>Dwell time down — a headline performance metric</td><td class="r good">Clear win</td></tr>
+  </table>
+
+  <h3>Annual — at facilitator scale</h3>
+  <p>4,800 containers a year, 720 affected, $1.44m exposure.</p>
+  <table>
+    <tr><th>Party</th><th class="r">Annual effect</th><th>Composition</th></tr>
+    <tr><td>Importers, in aggregate</td><td class="r good">≈ $840,000</td><td>$504k prevented, $335k recovered</td></tr>
+    <tr><td>Facilitator</td><td class="r good">fee + ~1,440 ops hours</td><td>Roughly 0.7 FTE redirected from archaeology to exceptions</td></tr>
+    <tr><td>Carriers, in aggregate</td><td class="r bad">≈ −$500,000 penalty</td><td>Offset by ~2,000 container-days returned to circulation</td></tr>
+    <tr><td>Terminals, in aggregate</td><td class="r bad">≈ −$180,000 storage</td><td>Offset by no-show reduction and dwell improvement</td></tr>
+    <tr><td>Drayage providers</td><td class="r good">wasted trips down</td><td>No offsetting loss</td></tr>
+  </table>
+
+  <div class="warn">
+    <span class="label">How to present this</span>
+    <p>Lead with the per-container arithmetic, which is fully shown and checkable. Use the annual model as the customer-level case. Cite industry totals only to establish that the category is large — never as an addressable market. A defensible small number beats an indefensible big one every time.</p>
+  </div>
+</section>
+
+<section id="s12">
+  <div class="sec-head"><span class="idx">12</span><h2>Process improvements, all parties</h2></div>
+
+  <p>Strip out the money and the same picture holds. Every party gains information they currently lack about a cost they currently bear.</p>
+
+  <table>
+    <tr><th>Party</th><th>The blindness today</th><th>What the agent supplies</th><th>Process gain</th></tr>
+    <tr><td><strong>Importer</strong></td><td>No view of terminal state or clock position</td><td>Live exposure per container from day 5</td><td>Plans around cost instead of discovering it</td></tr>
+    <tr><td><strong>Facilitator</strong></td><td>Six weeks between event and invoice</td><td>Continuous memory across the whole lifecycle</td><td>Exceptions handled, not reconstructed</td></tr>
+    <tr><td><strong>Carrier</strong></td><td>No view of the shipper's warehouse or intent</td><td>Empty returns clustered inside free time</td><td>Depot planning and equipment positioning improve</td></tr>
+    <tr><td><strong>Terminal</strong></td><td>Bookings do not predict arrivals</td><td>Slots released when unusable; demand smoothed off-peak</td><td>Effective capacity rises without capital spend</td></tr>
+    <tr><td><strong>Drayage</strong></td><td>No view of clocks or restrictions</td><td>Ranked, pre-validated, non-wasted work</td><td>Driver hours converted to revenue moves</td></tr>
+    <tr><td><strong>Port authority</strong></td><td>Dwell outliers explained after the fact</td><td>Grounding delays measured and attributed</td><td>A feedback loop on terminal performance that did not exist</td></tr>
+  </table>
+
+  <p>One pattern runs through the whole table: <strong>the agent does not automate anyone's job. It supplies the missing input that made everyone's job impossible to do well.</strong> That framing lands better with operators than "AI does it for you," and it happens to be true.</p>
+</section>
+
+<section id="s13">
+  <div class="sec-head"><span class="idx">13</span><h2>Commercial model</h2></div>
+
+  <p>The facilitator is both the billed party and the billing party. When the agent recovers $3,000, whose money is it? Answer this before anyone asks, because it is the first thing a logistics person will notice.</p>
+
+  <table>
+    <tr><th>Model</th><th>How it works</th><th>Best when</th><th>Risk</th></tr>
+    <tr><td><strong>Pass through, charge for the service</strong></td><td>Recovery goes to the shipper. Facilitator earns a per-container subscription or a management fee.</td><td>The facilitator wants D&amp;D management as a differentiator and a retention tool</td><td>Slower payback; needs a sales motion</td></tr>
+    <tr><td><strong>Keep what was absorbed</strong></td><td>Where the facilitator ate the charge rather than re-billing it, recovery is theirs outright.</td><td>Relationship accounts where charges were routinely absorbed</td><td>Requires clean records of what was absorbed</td></tr>
+    <tr><td><strong>Split by cause</strong></td><td>Prevention savings go to whoever would have paid; audit findings on non-compliant invoices go to whoever fronted the cash.</td><td>Mixed books with both absorbed and passed-through charges</td><td>More complex to explain</td></tr>
+  </table>
+
+  <p><strong>The recommendation is the first model.</strong> It turns D&amp;D management into something the facilitator sells rather than something it hides, and it aligns the agent's incentives with the shipper's. A facilitator caught quietly pocketing recoveries has a lawsuit; one publishing a quarterly ledger has a renewal.</p>
+
+  <p>Whichever model is chosen, <strong>make the ledger visible to the shipper</strong>, container by container, with prevented and recovered shown separately. Transparency here is not a courtesy — it is the mechanism that converts savings into retention.</p>
+
+  <h3>Pricing shapes worth testing</h3>
+  <ul>
+    <li><strong>Per-container subscription.</strong> Predictable for both sides; scales with volume rather than with dysfunction.</li>
+    <li><strong>Success fee on recoveries.</strong> Easy to sell, but it pays the vendor more when the supply chain performs worse — a bad incentive to design in.</li>
+    <li><strong>Hybrid.</strong> A low base fee covering prevention, plus a success share on disputes only. Aligns incentives on the half where alignment matters.</li>
+  </ul>
+  <p>The hybrid is the honest answer. Prevention should never be priced on failure.</p>
+</section>
+
+<section id="s14">
+  <div class="sec-head"><span class="idx">14</span><h2>The POC</h2></div>
+
+  <p>Ninety days, one lane, one facilitator. Scoped so it proves the thesis without needing anyone else's cooperation.</p>
+
+  <h3>Scope</h3>
+  <table>
+    <tr><th>Dimension</th><th>POC</th><th>Why</th></tr>
+    <tr><td>Lane</td><td>One origin–destination pair through one US port</td><td>One terminal's quirks, one set of tariffs, one appointment system</td></tr>
+    <tr><td>Volume</td><td>200–400 containers</td><td>Enough for the D&amp;D-affected subset to be statistically meaningful</td></tr>
+    <tr><td>Duration</td><td>90 days</td><td>Long enough for disputes filed in month one to resolve by month three</td></tr>
+    <tr><td>Shippers</td><td>2–3 accounts, ideally one that absorbs charges and one that is re-billed</td><td>Tests both commercial models at once</td></tr>
+    <tr><td>Integrations</td><td>EDI feed, one terminal portal, contract PDFs, invoice inbox</td><td>All data the facilitator already has or receives</td></tr>
+    <tr><td>Out of scope</td><td>Carrier API integration, autonomous sending, multi-port</td><td>Anything requiring a third party's permission</td></tr>
+  </table>
+
+  <h3>Phasing</h3>
+  <table>
+    <tr><th class="mono">Weeks</th><th>Phase</th><th>What runs</th><th>Exit criterion</th></tr>
+    <tr><td class="mono">1–3</td><td>Shadow</td><td>Agents observe and recommend; humans act. Counterfactuals logged, nothing sent.</td><td>Prediction calibration within tolerance on 50+ containers</td></tr>
+    <tr><td class="mono">4–6</td><td>Assisted</td><td>Agent drafts every empty-return booking and dispute; a human approves each one.</td><td>Approval rate above 80% — the agent's judgement is trusted</td></tr>
+    <tr><td class="mono">7–12</td><td>Bounded autonomy</td><td>Zero-cost actions autonomous. Anything above the spend cap still parks on a human.</td><td>Prevented and recovered totals measured against the shadow baseline</td></tr>
+  </table>
+
+  <p><strong>Shadow mode first is non-negotiable.</strong> At launch the agent has no priors — no idea which depots issue restrictions, how far ahead this terminal releases slots, or which arguments win against which carrier. Three weeks of observation buys the calibration that earns the right to act, and it costs nothing but time.</p>
+
+  <h3>What the POC must prove</h3>
+  <ol>
+    <li><strong>The clocks are computable.</strong> Three allowances, per carrier and terminal, extracted from contracts and tariffs and reconciled against real invoices.</li>
+    <li><strong>Evidence accumulates by itself.</strong> Availability gaps and appointment failures captured with timestamps, without anyone remembering to.</li>
+    <li><strong>The empty-return path fires.</strong> The single highest-value action, and the one that needs no dispute to realise.</li>
+    <li><strong>Invoice audit finds real defects.</strong> Run the regulatory checklist against 90 days of genuine invoices and count the hits. This is the number that will surprise the room.</li>
+    <li><strong>The counterfactual holds up.</strong> Predictions scored against outcomes, with the misses shown.</li>
+  </ol>
+
+  <h3>Success thresholds</h3>
+  <table>
+    <tr><th>Metric</th><th class="r">Target</th><th>Read</th></tr>
+    <tr><td>Charges prevented vs shadow baseline</td><td class="r">≥ 25%</td><td>Below this, prevention is not working</td></tr>
+    <tr><td>Dispute rate on eligible charges</td><td class="r">≥ 80%</td><td>Today it is near zero; this is the easiest win</td></tr>
+    <tr><td>Evidence completeness on billed days</td><td class="r">≥ 90%</td><td>Predicts win rate better than anything else</td></tr>
+    <tr><td>Invoice compliance defect rate</td><td class="r">measure it</td><td>No prior expectation — the finding <em>is</em> the result</td></tr>
+    <tr><td>Intervention precision</td><td class="r">≥ 60%</td><td>Guards against an agent that spends to look busy</td></tr>
+    <tr><td>Ops hours per affected container</td><td class="r">≤ 0.5</td><td>From roughly two hours today</td></tr>
+  </table>
+
+  <div class="note">
+    <span class="label">The one-page POC pitch</span>
+    <p>"Give us one lane and ninety days. We will run in shadow for three weeks and show you what you would have saved. Then we will act on the free wins only. You will get a container-by-container ledger you can show your shippers, and a count of how many carrier invoices did not meet federal requirements. Nothing we do requires a carrier or terminal to agree to anything."</p>
+  </div>
+</section>
+
+<section id="s15">
+  <div class="sec-head"><span class="idx">15</span><h2>Objections, by stakeholder</h2></div>
+
+  <h3>From the facilitator</h3>
+  <p><strong>"Our shippers will ask why we weren't doing this already."</strong> Because it was not possible to do at volume. The honest answer builds trust: nobody could hold four hundred containers' worth of context for six weeks each. Frame the launch as a capability, not an apology.</p>
+  <p><strong>"Will this damage our carrier relationships?"</strong> The prevention half improves them. The dispute half is a channel the carrier already operates and already concedes into. What damages relationships is surprise escalation, which this reduces.</p>
+  <p><strong>"What if the agent books something wrong?"</strong> Spend caps bound the exposure, compensation undoes side effects, and phase one is shadow mode. The first six weeks contain no autonomous spending at all.</p>
+
+  <h3>From the importer</h3>
+  <p><strong>"How do I know you're passing on the recoveries?"</strong> The container-by-container ledger, published quarterly, with prevented and recovered shown separately. Pick the pass-through model and this objection disappears.</p>
+  <p><strong>"Is disputing going to get us blacklisted?"</strong> Disputing is a mechanism the regulation establishes and the carrier already operates. What changes is the quality of the claim, not the fact of it.</p>
+
+  <h3>From the carrier</h3>
+  <p><strong>"You are just trying to avoid legitimate charges."</strong> We are avoiding the delays that generate them, which is what the charge was designed to do. Where we dispute, we dispute charges that are non-compliant or caused by your own performance — and we bring documents rather than assertions.</p>
+  <p><strong>"This will flood us with disputes."</strong> Volume up, cost per dispute down. A cited claim naming a specific defect is faster to adjudicate than a reconstructed argument, and defects surfaced privately do not become formal complaints.</p>
+
+  <h3>From the terminal</h3>
+  <p><strong>"Automated scanning will hammer our appointment system."</strong> Rate limiting is enforced at the worker level across the whole fleet, not per container. And the same design releases slots it cannot use — no-show reduction is a direct gain to your capacity.</p>
+
+  <h3>From a judge</h3>
+  <p><strong>"Isn't this zero-sum?"</strong> Roughly 40% of the value is prevention, which is aligned with the party charging for it. The remaining 60% is contested, but it is contested under a federal mechanism built for the purpose, against charges the carriers themselves already waive at about a fifth of billings.</p>
+</section>
+
+<section id="s16">
+  <div class="sec-head"><span class="idx">16</span><h2>Metrics, by stakeholder</h2></div>
+
+  <p>Every party gets a number they recognise. Nobody is asked to trust someone else's dashboard.</p>
+
+  <table>
+    <tr><th>Party</th><th>Primary metric</th><th>Secondary</th><th>Reported</th></tr>
+    <tr><td><strong>Importer</strong></td><td>Landed cost per container, D&amp;D component</td><td>Accrual accuracy; average dwell to delivery</td><td>Monthly ledger, quarterly review</td></tr>
+    <tr><td><strong>Facilitator — ops</strong></td><td>Charges prevented vs counterfactual</td><td>Intervention precision; ops hours per affected box</td><td>Live dashboard</td></tr>
+    <tr><td><strong>Facilitator — finance</strong></td><td>Charges recovered; invoice compliance defect rate</td><td>Days between invoice and dispute filed</td><td>Weekly</td></tr>
+    <tr><td><strong>Carrier</strong></td><td>Equipment days returned to circulation</td><td>Cost per dispute adjudicated; formal complaint count</td><td>Quarterly business review</td></tr>
+    <tr><td><strong>Terminal</strong></td><td>Appointment no-show rate</td><td>Average dwell on managed containers; off-peak share</td><td>Quarterly</td></tr>
+    <tr><td><strong>Drayage</strong></td><td>Wasted trips avoided</td><td>Chassis days per move; appointment success rate</td><td>Monthly</td></tr>
+    <tr><td><strong>Port authority</strong></td><td>Container dwell time</td><td>Gate throughput distribution across shifts</td><td>Quarterly</td></tr>
+  </table>
+
+  <h3>The one metric that governs all of them</h3>
+  <p><strong>Prediction calibration.</strong> Predicted charges against realised charges, with the misses shown rather than hidden. It is the number that earns the agent the right to act autonomously, and it is the number that keeps every other figure in this document honest.</p>
+
+  <p>A dashboard that only ever reports wins is a dashboard nobody in logistics will believe. Show the cases where the agent spent money that did not need spending, and where it predicted a charge that never came. That is what separates a measured system from a marketed one.</p>
+
+  <div class="note">
+    <span class="label">The closing line</span>
+    <p>Every party in this chain is blind to the thing that causes their own cost. The agent does not automate anyone's job — it supplies the missing input that made everyone's job impossible to do well. That is why the value is not zero-sum, and it is why the facilitator, sitting where all five views overlap, is the only party who can build it.</p>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

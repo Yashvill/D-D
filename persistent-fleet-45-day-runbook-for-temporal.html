@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Persistent Fleet — 45-Day Workflow Runbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EFF1EE; --paper-2:#E6E9E5;
+  --ink:#17242C; --ink-soft:#4A5A62;
+  --rule:#C3CAC6; --rule-soft:#D8DCD8;
+  --stamp:#A83B22; --stamp-bg:#F5E6E1;
+  --sea:#1D5B6E; --sea-bg:#E1EAEC;
+  --flag:#B0781F; --flag-bg:#F5EBD9;
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding:0 32px 120px}
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.2;margin:0}
+p{margin:0 0 1.1em}
+code{font-family:var(--mono);font-size:.87em;background:var(--paper-2);padding:1px 5px;border-radius:2px}
+.label{font-family:var(--display);font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+
+.masthead{border-bottom:2px solid var(--ink);padding-top:40px;margin-bottom:8px}
+.masthead h1{font-size:48px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.masthead .sub{font-family:var(--display);font-size:19px;font-weight:400;color:var(--ink-soft);margin-bottom:26px}
+.fields{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule)}
+.field{padding:10px 14px 12px;border-right:1px solid var(--rule)}
+.field:last-child{border-right:none}
+.field .label{display:block;margin-bottom:3px}
+.field .val{font-family:var(--mono);font-size:13px;font-weight:500}
+
+section{margin-top:60px;scroll-margin-top:20px}
+.sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--ink);padding-bottom:8px;margin-bottom:22px}
+.sec-head .idx{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--stamp)}
+.sec-head h2{font-size:27px;letter-spacing:-.01em}
+h3{font-size:19px;margin:30px 0 10px}
+h4{font-size:15px;margin:20px 0 6px;font-weight:600}
+
+.toc{border:1px solid var(--rule);background:var(--paper-2);padding:20px 24px;margin-top:36px}
+.toc ol{margin:10px 0 0;padding-left:0;list-style:none;columns:2;column-gap:36px}
+.toc li{font-family:var(--display);font-size:14px;padding:3px 0;break-inside:avoid}
+.toc li a{text-decoration:none;color:var(--ink)}
+.toc li a:hover{color:var(--stamp)}
+.toc .n{font-family:var(--mono);font-size:11.5px;color:var(--stamp);margin-right:8px}
+
+.lede{font-size:20px;line-height:1.55;border-left:3px solid var(--stamp);padding-left:20px;margin-bottom:26px}
+
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:18px 0}
+th{font-family:var(--display);font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;text-align:left;padding:8px 10px;border-bottom:1.5px solid var(--ink);color:var(--ink-soft);vertical-align:bottom}
+td{padding:9px 10px;border-bottom:1px solid var(--rule-soft);vertical-align:top;line-height:1.45}
+td.mono,th.mono{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+td.r{text-align:right;font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+tr.tot td{border-top:1.5px solid var(--ink);border-bottom:none;font-weight:600;background:var(--paper-2)}
+tr.hot td{background:#F9F0ED}
+.bad{color:var(--stamp)} .good{color:var(--sea)} .mute{color:var(--ink-soft)}
+
+/* day cards */
+.day{border:1px solid var(--rule);background:#fff;margin:24px 0}
+.day-head{display:flex;align-items:center;gap:16px;padding:12px 18px;border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.day-head .d{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--stamp);white-space:nowrap}
+.day-head .cal{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);white-space:nowrap}
+.day-head .t{font-family:var(--display);font-size:16px;font-weight:600;flex:1}
+.day-head .cash{font-family:var(--mono);font-size:14px;font-weight:600;white-space:nowrap}
+.day-body{padding:14px 18px 16px}
+.day-body p{font-size:16px;margin-bottom:.8em}
+.day-body p:last-child{margin-bottom:0}
+.spec{display:grid;grid-template-columns:104px 1fr;gap:2px 14px;font-size:14px;margin:10px 0 14px;border-top:1px solid var(--rule-soft);padding-top:12px}
+.spec dt{font-family:var(--display);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);padding-top:3px}
+.spec dd{margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.5}
+.pill{display:inline-block;border:1px solid var(--stamp);color:var(--stamp);background:var(--stamp-bg);font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.1em;padding:2px 7px;margin-right:5px}
+.pill.ok{border-color:var(--sea);color:var(--sea);background:var(--sea-bg)}
+
+.note{border:1px solid var(--sea);background:var(--sea-bg);padding:15px 19px;margin:20px 0;font-size:16px}
+.note .label{color:var(--sea);display:block;margin-bottom:5px}
+.warn{border:1px solid var(--flag);background:var(--flag-bg);padding:15px 19px;margin:20px 0;font-size:16px}
+.warn .label{color:var(--flag);display:block;margin-bottom:5px}
+.note p:last-child,.warn p:last-child{margin-bottom:0}
+
+figure{margin:28px 0;border:1px solid var(--rule);background:#fff;padding:22px 20px 14px}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:var(--display);font-size:12px;color:var(--ink-soft);border-top:1px solid var(--rule-soft);padding-top:9px;margin-top:14px}
+figcaption b{font-weight:600;color:var(--ink)}
+
+pre{background:var(--ink);color:#DCE4E4;font-family:var(--mono);font-size:12.5px;line-height:1.6;padding:17px 19px;overflow-x:auto;margin:16px 0}
+pre .c{color:#7E9198} pre .k{color:#8FC6D6} pre .s{color:#D9A05B}
+
+ul,ol{margin:0 0 1.1em;padding-left:22px}
+li{margin-bottom:.4em}
+
+.legend{display:grid;grid-template-columns:repeat(2,1fr);gap:0;border:1px solid var(--rule);background:#fff;margin:22px 0}
+.legend div{padding:12px 16px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.legend div:nth-child(2n){border-right:none}
+.legend .k{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--sea);display:block;margin-bottom:2px}
+.legend .v{font-size:14.5px;line-height:1.45}
+
+@media(max-width:820px){
+  .wrap{padding:0 18px 80px}
+  .masthead h1{font-size:32px}
+  .fields{grid-template-columns:1fr 1fr}
+  .field{border-bottom:1px solid var(--rule)}
+  .toc ol{columns:1}
+  .legend{grid-template-columns:1fr}
+  .legend div{border-right:none}
+  .spec{grid-template-columns:1fr;gap:0}
+  .spec dt{margin-top:8px}
+  .day-head{flex-wrap:wrap;gap:8px}
+  table{font-size:12.5px} td,th{padding:7px 6px}
+}
+@media print{body{background:#fff} figure,.day,.note,.warn{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <h1>45-Day Workflow Runbook</h1>
+  <div class="sub">Day-by-day Temporal build spec, with the cash leak at every step</div>
+  <div class="fields">
+    <div class="field"><span class="label">Document</span><span class="val">PF-003 · Rev A</span></div>
+    <div class="field"><span class="label">Container</span><span class="val">MSKU 748192-0</span></div>
+    <div class="field"><span class="label">Lane</span><span class="val">Ningbo → USLAX → Fontana</span></div>
+    <div class="field"><span class="label">Total at stake</span><span class="val">$5,585</span></div>
+  </div>
+</header>
+
+<div class="toc">
+  <span class="label">Contents</span>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>How to read this</a></li>
+    <li><a href="#s2"><span class="n">02</span>The workflow cast</a></li>
+    <li><a href="#s3"><span class="n">03</span>The burn curve</a></li>
+    <li><a href="#s4"><span class="n">04</span>Phase 0 — days 1–7, pre-arrival</a></li>
+    <li><a href="#s5"><span class="n">05</span>Phase 1 — days 8–12, free time</a></li>
+    <li><a href="#s6"><span class="n">06</span>Phase 2 — days 13–20, demurrage</a></li>
+    <li><a href="#s7"><span class="n">07</span>Phase 3 — days 20–31, detention</a></li>
+    <li><a href="#s8"><span class="n">08</span>Phase 4 — days 32–45, dispute</a></li>
+    <li><a href="#s9"><span class="n">09</span>The tail — days 46–90</a></li>
+    <li><a href="#s10"><span class="n">10</span>Master table, all 45 days</a></li>
+    <li><a href="#s11"><span class="n">11</span>Cash leak ledger</a></li>
+    <li><a href="#s12"><span class="n">12</span>Signal &amp; timer reference</a></li>
+    <li><a href="#s13"><span class="n">13</span>Workflow state at each phase</a></li>
+    <li><a href="#s14"><span class="n">14</span>Time-skipping test plan</a></li>
+    <li><a href="#s15"><span class="n">15</span>Failure injection points</a></li>
+    <li><a href="#s16"><span class="n">16</span>Build order</a></li>
+  </ol>
+</div>
+
+<section id="s1">
+  <div class="sec-head"><span class="idx">01</span><h2>How to read this</h2></div>
+
+  <p class="lede">One container, 45 days, every day accounted for. Each day states what fires, which Temporal primitive does it, which cash leak it addresses, and what happens to the money.</p>
+
+  <p>Day 1 is the arrival notice, not the discharge. The agent exists before the vessel does, which is the first thing most designs get wrong — by the time a box is discharged, two of the four free days are already committed.</p>
+
+  <p>Calendar dates are March–April 2026 and map to the worked example in the main project document. Charges use the published 2026 US West Coast tier ranges.</p>
+
+  <h3>Notation</h3>
+  <div class="legend">
+    <div><span class="k">TIMER</span><span class="v">A durable <code>workflow.sleep()</code> or a <code>wait_condition</code> with a timeout. Survives crashes and deploys.</span></div>
+    <div><span class="k">SIGNAL</span><span class="v">An external event delivered into a running — usually sleeping — workflow.</span></div>
+    <div><span class="k">ACTIVITY</span><span class="v">Work with side effects or non-determinism. All LLM calls live here.</span></div>
+    <div><span class="k">QUERY</span><span class="v">A side-effect-free read of live workflow state, for the control tower.</span></div>
+    <div><span class="k">CHILD</span><span class="v">A child workflow spawned to own the next arc of the container's life.</span></div>
+    <div><span class="k">SAGA</span><span class="v">A compensating action registered so a later failure can undo this step.</span></div>
+    <div><span class="k">EVIDENCE</span><span class="v">A fact written to history with a <code>source_document_id</code>. Later becomes dispute material.</span></div>
+    <div><span class="k">LEAK nn</span><span class="v">Which of the seven cash leaks this day touches. See section 11.</span></div>
+  </div>
+
+  <p>Days where the agent is asleep are still shown. They matter: a sleeping day costs nothing, holds full state, and is the reason one agent per container is affordable at all.</p>
+</section>
+
+<section id="s2">
+  <div class="sec-head"><span class="idx">02</span><h2>The workflow cast</h2></div>
+
+  <p>Four workflows. One parent that owns the container's identity for its whole life, and three children that each own exactly one clock.</p>
+
+  <table>
+    <tr><th>Workflow</th><th class="mono">Lives</th><th>Owns</th><th>Ends when</th></tr>
+    <tr><td><code>ContainerWorkflow</code><br><span class="mute">parent, entity workflow</span></td><td class="mono">Day 1 → 45+</td><td>Identity, contract terms, the event log, all evidence, and the counterfactual ledger</td><td>Empty returned <em>and</em> all disputes closed</td></tr>
+    <tr><td><code>DemurrageArc</code><br><span class="mute">child</span></td><td class="mono">Day 8 → 20</td><td>The terminal clock. Availability polling, effective-LFD calculation, checkpoint loop, interventions</td><td>Gate-out signal</td></tr>
+    <tr><td><code>DetentionArc</code><br><span class="mute">child</span></td><td class="mono">Day 20 → 31</td><td>The equipment clock. Empty-return booking, restriction monitoring, chassis accrual</td><td>Empty accepted</td></tr>
+    <tr><td><code>DisputeArc</code><br><span class="mute">child, ABANDON</span></td><td class="mono">Day 40 → 90+</td><td>One instance per invoice. Part 541 audit, evidence assembly, filing, follow-up cadence, settlement</td><td>Resolved, or escalated to a human</td></tr>
+  </table>
+
+  <p>Why the split matters: the three clocks have different owners, different evidence, and different end conditions. Cramming them into one workflow produces a state machine you will spend the hackathon debugging. Splitting them means the detention agent keeps running long after the demurrage story is over — which is where a third of the money lives.</p>
+
+  <div class="note">
+    <span class="label">Why the parent holds the evidence</span>
+    <p>Each arc closes when its clock stops, but the dispute needs facts from all three arcs, filed weeks later. Evidence therefore accumulates on the parent and is passed down to <code>DisputeArc</code> at spawn time. Children report; the parent remembers.</p>
+  </div>
+
+<pre><span class="c"># the four workflows, in one page</span>
+<span class="k">@workflow.defn</span>
+<span class="k">class</span> ContainerWorkflow:
+    <span class="k">@workflow.run</span>
+    <span class="k">async def</span> run(self, c: ContainerInput):
+        self.terms = <span class="k">await</span> execute_activity(act.load_contract_terms, c.contract_id)
+
+        <span class="c"># Day 1–7: exist, but do nothing expensive</span>
+        <span class="k">await</span> workflow.wait_condition(<span class="k">lambda</span>: self.discharged_at <span class="k">is not</span> <span class="k">None</span>)
+
+        <span class="c"># Day 8–20</span>
+        dem = <span class="k">await</span> execute_child_workflow(DemurrageArc.run, args=[c, self.terms])
+        self.evidence += dem.evidence
+
+        <span class="c"># Day 20–31</span>
+        det = <span class="k">await</span> execute_child_workflow(DetentionArc.run, args=[c, self.terms])
+        self.evidence += det.evidence
+
+        <span class="c"># Day 40+: one dispute per invoice, each outliving this workflow</span>
+        <span class="k">while</span> <span class="k">not</span> self.closed:
+            <span class="k">await</span> workflow.wait_condition(<span class="k">lambda</span>: self.pending_invoices)
+            <span class="k">for</span> inv <span class="k">in</span> self.pending_invoices.pop_all():
+                <span class="k">await</span> start_child_workflow(
+                    DisputeArc.run, args=[c.container_id, inv, self.terms, self.evidence],
+                    id=<span class="s">f"dispute::{inv.invoice_id}"</span>,
+                    parent_close_policy=ParentClosePolicy.ABANDON)</pre>
+</section>
+
+<section id="s3">
+  <div class="sec-head"><span class="idx">03</span><h2>The burn curve</h2></div>
+
+  <p>Cumulative cost across the 45 days, with and without agents. The two lines are identical until day 20 — because until gate-out, nothing was controllable. Everything after that is pure prevention.</p>
+
+  <figure>
+  <svg viewBox="0 0 840 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cumulative cost curve over 45 days. Both scenarios accrue identically to $4,100 by day 20. Without agents the curve continues to $5,585 by day 31. With agents it stays flat at $4,100 because detention never accrues.">
+    <line x1="70" y1="250" x2="810" y2="250" stroke="#17242C" stroke-width="1"/>
+    <line x1="70" y1="30" x2="70" y2="250" stroke="#C3CAC6" stroke-width="1"/>
+    <line x1="70" y1="30" x2="810" y2="30" stroke="#D8DCD8" stroke-width="1" stroke-dasharray="3 3"/>
+    <line x1="70" y1="89" x2="810" y2="89" stroke="#D8DCD8" stroke-width="1" stroke-dasharray="3 3"/>
+    <text x="62" y="34" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#4A5A62" text-anchor="end">$5,585</text>
+    <text x="62" y="93" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#4A5A62" text-anchor="end">$4,100</text>
+    <text x="62" y="253" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="#4A5A62" text-anchor="end">$0</text>
+
+    <polyline points="70,250 236,250 252,245 269,232 286,219 302,207 319,189 335,166 352,144 369,116 385,89" fill="none" stroke="#17242C" stroke-width="2.5"/>
+    <polyline points="385,89 452,87 468,85 485,77 502,70 518,62 535,51 551,41 568,30 810,30" fill="none" stroke="#A83B22" stroke-width="2.5"/>
+    <polyline points="385,89 810,89" fill="none" stroke="#1D5B6E" stroke-width="2.5" stroke-dasharray="7 4"/>
+
+    <line x1="700" y1="30" x2="700" y2="89" stroke="#1D5B6E" stroke-width="1"/>
+    <line x1="694" y1="30" x2="706" y2="30" stroke="#1D5B6E" stroke-width="1"/>
+    <line x1="694" y1="89" x2="706" y2="89" stroke="#1D5B6E" stroke-width="1"/>
+    <text x="712" y="56" font-family="Archivo,sans-serif" font-size="12" font-weight="600" fill="#1D5B6E">$1,485</text>
+    <text x="712" y="71" font-family="Archivo,sans-serif" font-size="11" fill="#4A5A62">never billed</text>
+
+    <circle cx="385" cy="89" r="4" fill="#17242C"/>
+    <text x="385" y="76" font-family="Archivo,sans-serif" font-size="11" font-weight="600" fill="#17242C" text-anchor="middle">gate-out</text>
+
+    <line x1="70" y1="246" x2="70" y2="254" stroke="#17242C" stroke-width="1"/>
+    <line x1="186" y1="246" x2="186" y2="254" stroke="#17242C" stroke-width="1"/>
+    <line x1="252" y1="246" x2="252" y2="254" stroke="#17242C" stroke-width="1"/>
+    <line x1="385" y1="246" x2="385" y2="254" stroke="#17242C" stroke-width="1"/>
+    <line x1="568" y1="246" x2="568" y2="254" stroke="#17242C" stroke-width="1"/>
+    <line x1="800" y1="246" x2="800" y2="254" stroke="#17242C" stroke-width="1"/>
+    <text x="70" y="270" font-family="IBM Plex Mono,monospace" font-size="11" fill="#17242C" text-anchor="middle">D1</text>
+    <text x="70" y="285" font-family="Archivo,sans-serif" font-size="10.5" fill="#4A5A62" text-anchor="middle">notice</text>
+    <text x="186" y="270" font-family="IBM Plex Mono,monospace" font-size="11" fill="#17242C" text-anchor="middle">D8</text>
+    <text x="186" y="285" font-family="Archivo,sans-serif" font-size="10.5" fill="#4A5A62" text-anchor="middle">discharge</text>
+    <text x="252" y="270" font-family="IBM Plex Mono,monospace" font-size="11" fill="#17242C" text-anchor="middle">D12</text>
+    <text x="252" y="285" font-family="Archivo,sans-serif" font-size="10.5" fill="#4A5A62" text-anchor="middle">LFD</text>
+    <text x="385" y="270" font-family="IBM Plex Mono,monospace" font-size="11" fill="#17242C" text-anchor="middle">D20</text>
+    <text x="385" y="285" font-family="Archivo,sans-serif" font-size="10.5" fill="#4A5A62" text-anchor="middle">gate-out</text>
+    <text x="568" y="270" font-family="IBM Plex Mono,monospace" font-size="11" fill="#17242C" text-anchor="middle">D31</text>
+    <text x="568" y="285" font-family="Archivo,sans-serif" font-size="10.5" fill="#4A5A62" text-anchor="middle">empty in</text>
+    <text x="800" y="270" font-family="IBM Plex Mono,monospace" font-size="11" fill="#17242C" text-anchor="middle">D45</text>
+    <text x="800" y="285" font-family="Archivo,sans-serif" font-size="10.5" fill="#4A5A62" text-anchor="middle">filed</text>
+
+    <line x1="70" y1="306" x2="96" y2="306" stroke="#A83B22" stroke-width="2.5"/>
+    <text x="104" y="310" font-family="Archivo,sans-serif" font-size="12" fill="#4A5A62">without agents</text>
+    <line x1="230" y1="306" x2="256" y2="306" stroke="#1D5B6E" stroke-width="2.5" stroke-dasharray="7 4"/>
+    <text x="264" y="310" font-family="Archivo,sans-serif" font-size="12" fill="#4A5A62">with agents — detention never starts</text>
+  </svg>
+  <figcaption><b>Figure 1.</b> The curves diverge at gate-out. The $4,100 accrued before day 20 is not prevented — it is <em>contested</em>, and the recovery lands after day 60, off the right edge of this chart.</figcaption>
+  </figure>
+
+  <p>Two things to notice. The slope steepens between days 17 and 20 — that is tier escalation, and it is why the last three days cost more than the first five. And the agent's line goes flat at exactly the moment the human process stops paying attention.</p>
+</section>
+
+<section id="s4">
+  <div class="sec-head"><span class="idx">04</span><h2>Phase 0 — days 1–7, pre-arrival</h2></div>
+
+  <p>Nothing is at stake yet, and that is precisely why this phase exists. Everything the agent will need for the next six weeks gets loaded now, while it is cheap.</p>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D1</span><span class="cal">Feb 24</span><span class="t">Arrival notice — workflow starts</span><span class="cash mute">$0</span></div>
+    <div class="day-body">
+      <p>The carrier's arrival notice arrives. <code>ContainerWorkflow</code> is started with a deterministic ID of <code>container::MSKU7481920</code>, which makes the whole system idempotent — a duplicate notice cannot create a second agent.</p>
+      <p>The Watcher parses the service contract PDF and extracts free-time allowances, tier tables, weekend and holiday counting rules, and per-port exceptions into structured state. This is the single highest-leverage activity in the entire 45 days: it is the fact nobody currently has, and every later calculation depends on it.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd>workflow start · deterministic ID</dd>
+        <dt>Activities</dt><dd>load_contract_terms · resolve_identity</dd>
+        <dt>State set</dt><dd>terms, container_id, port, carrier, terminal, consignee</dd>
+        <dt>Leak</dt><dd><span class="pill">LEAK 05</span> deadline never known</dd>
+        <dt>Cash</dt><dd>none yet — this is the enabling step</dd>
+      </dl>
+      <p><strong>Build note.</strong> Term extraction is an LLM activity and it will sometimes be wrong. Have it emit a confidence score and route anything below threshold to a human on day 1, when there is no time pressure at all.</p>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D2–3</span><span class="cal">Feb 25–26</span><span class="t">Asleep</span><span class="cash mute">$0</span></div>
+    <div class="day-body">
+      <p>The workflow holds full state and consumes no worker capacity. This is the property that makes ten thousand concurrent agents affordable.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd>wait_condition(discharged) — no timeout</dd>
+        <dt>Cost</dt><dd>zero compute; state persisted in the cluster</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D4</span><span class="cal">Feb 27</span><span class="t">Customs entry filed</span><span class="cash mute">$0</span></div>
+    <div class="day-body">
+      <p>The broker files the entry. A signal wakes the workflow, which records the timestamp and — importantly — notes that entry was filed <em>in advance</em>. If a hold lands later, this fact rules out one carrier defence: that the delay was caused by late filing.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">SIGNAL</span> customs_entry_filed</dd>
+        <dt>Evidence</dt><dd>ace::entry::SUM-4471, occurred_at recorded</dd>
+        <dt>Leak</dt><dd><span class="pill">LEAK 02</span> pre-emptive defence</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D5–7</span><span class="cal">Feb 28 – Mar 2</span><span class="t">Vessel inbound, ETA drift monitored</span><span class="cash mute">$0</span></div>
+    <div class="day-body">
+      <p>A slow timer polls the vessel schedule. If the ETA moves more than 24 hours, the agent re-primes: warehouse receiving slot, drayage provisional booking, and the projected LFD all shift together.</p>
+      <p>The agent also pulls the current appointment-scarcity prior for this terminal from the learning store. If Pier 400 has been running two-day slot lead times, the plan for day 8 is different from the plan when slots are open.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">TIMER</span> sleep(12h) loop until discharge</dd>
+        <dt>Activities</dt><dd>poll_vessel_schedule · fetch_terminal_priors</dd>
+        <dt>State set</dt><dd>projected_lfd, slot_scarcity_prior</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section id="s5">
+  <div class="sec-head"><span class="idx">05</span><h2>Phase 1 — days 8–12, free time</h2></div>
+
+  <p>The clock is running and nothing is billed yet. This is the only phase where cheap action beats expensive defence, and in our container it is also where the first leak silently opens.</p>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D8</span><span class="cal">Mar 3, 06:00</span><span class="t">Discharge — DemurrageArc spawned</span><span class="cash mute">$0</span></div>
+    <div class="day-body">
+      <p>The box comes off the vessel. The parent spawns <code>DemurrageArc</code>, which computes the nominal last free day at day 12 and begins polling for availability.</p>
+      <p>It does <em>not</em> yet trust that date. Nominal LFD is what the carrier will bill against; effective LFD is what the agent will argue.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">CHILD</span> DemurrageArc · <span class="pill ok">SIGNAL</span> discharged</dd>
+        <dt>Activities</dt><dd>check_availability (retry policy, 4h loop)</dd>
+        <dt>State set</dt><dd>discharged_at, nominal_lfd = D12</dd>
+        <dt>Cash</dt><dd>$0 — 4 free days remain on paper</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D8–10</span><span class="cal">Mar 3–5</span><span class="t">Ungrounded — the invisible loss</span><span class="cash bad">$0 billed · 2 days lost</span></div>
+    <div class="day-body">
+      <p>The container is buried in a stack. <code>check_availability</code> returns <code>None</code> on every poll, and each <code>None</code> is written to history with the terminal's own timestamp.</p>
+      <p>Nothing is billed today. But two of four free days have been consumed by the terminal's handling, and because the tier ladder is convex, those two days will eventually cost $900 at the far end. <strong>The most expensive days of this container are being created right now, and no human process notices.</strong></p>
+      <p>When availability finally lands, the agent shifts the effective LFD by the measured gap and stamps the whole window as cited evidence.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">TIMER</span> sleep(4h) × 12 · <span class="pill ok">EVIDENCE</span></dd>
+        <dt>Activities</dt><dd>check_availability → None (×12, all recorded)</dd>
+        <dt>State set</dt><dd>available_at = D10, effective_lfd = D14</dd>
+        <dt>Leak</dt><dd><span class="pill">LEAK 01</span> clock started before you could act</dd>
+        <dt>Cash</dt><dd>$900 of future exposure created, silently</dd>
+      </dl>
+      <p><strong>Build note.</strong> Do not model a failed poll as an error. It is a successful observation of an adverse fact, and it belongs in the evidence list, not the retry log.</p>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D9</span><span class="cal">Mar 4</span><span class="t">CET exam hold placed</span><span class="cash mute">$0</span></div>
+    <div class="day-body">
+      <p>Customs places a Contraband Enforcement Team hold. The container is routed to a Centralised Examination Station, unloaded piece by piece, at the importer's expense.</p>
+      <p>The signal wakes the sleeping workflow. Two things happen, and the second is the counter-intuitive one: the agent records the hold as evidence, then <strong>suppresses all intervention.</strong> Spending $340 on an expedited trucker for a container that is legally immovable is pure waste. A naive agent would fire every countermeasure it has.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">SIGNAL</span> hold_placed → wakes sleeping workflow</dd>
+        <dt>State set</dt><dd>holds = {customs_exam}, intervention_suppressed = True</dd>
+        <dt>Evidence</dt><dd>ace::CET-88213, hold_placed_at</dd>
+        <dt>Leak</dt><dd><span class="pill">LEAK 02</span> billed while forbidden to move</dd>
+        <dt>Cash</dt><dd>$0 now; opens a defensible window worth ~$1,050</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D11</span><span class="cal">Mar 6</span><span class="t">Terminal storage free time expires</span><span class="cash bad">$125/day begins</span></div>
+    <div class="day-body">
+      <p>The terminal's allowance is three days, shorter than the carrier's four. Storage starts biting a full day before demurrage — a fact almost no importer anticipates, because the two allowances live in different documents.</p>
+      <p>The agent tracks all three clocks independently. A single "last free day" field would have missed this entirely.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">TIMER</span> storage_lfd checkpoint</dd>
+        <dt>State set</dt><dd>storage_accruing = True</dd>
+        <dt>Cash</dt><dd>first real dollars: $125</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D12</span><span class="cal">Mar 7</span><span class="t">Demurrage last free day</span><span class="cash bad">$125 cumulative</span></div>
+    <div class="day-body">
+      <p>The LFD−72h, −48h and −24h checkpoints have all fired by now. At each one the Strategist priced the options and stored a counterfactual. At each one the answer was the same: the box is under exam, no action is available, do nothing and keep recording.</p>
+      <p>That is the correct answer, and the counterfactual ledger will later prove the agent was right not to spend — which is how you defend against the accusation that an autonomous agent burns money to look busy.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">TIMER</span> ×3 checkpoints · <span class="pill ok">ACTIVITY</span> assess_risk (LLM)</dd>
+        <dt>State set</dt><dd>risk = RED, counterfactual_usd = 2,475</dd>
+        <dt>Query</dt><dd>control tower shows RED, "blocked: customs exam"</dd>
+        <dt>Leak</dt><dd><span class="pill">LEAK 05</span> — closed. The deadline is known</dd>
+        <dt>Cash</dt><dd>$0 saved today; full exposure forecast and visible</dd>
+      </dl>
+      <p><strong>The honest note for judges.</strong> The agent cannot prevent this half. What it does instead is know the number before it happens, and build the case while the facts are still true.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s6">
+  <div class="sec-head"><span class="idx">06</span><h2>Phase 2 — days 13–20, demurrage accruing</h2></div>
+
+  <p>Eight billed days, $4,100 across two companies, and not one day attributable to the importer. The agent's job here is not to stop the bleeding — it cannot — but to make every day of it provable.</p>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D13–16</span><span class="cal">Mar 8–11</span><span class="t">Exam continues, charges compound</span><span class="cash bad">$1,550 cumulative</span></div>
+    <div class="day-body">
+      <p>Demurrage and storage now run together. The agent wakes daily, reassesses, and finds the same blocked state. Each wake writes one line: the hold is still open, checked at this timestamp, against this customs reference.</p>
+      <p>That daily record is what a human process cannot produce five weeks later. It is not clever — it is just continuous, which is exactly the thing humans cannot be across four hundred containers.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">TIMER</span> sleep(24h) loop · <span class="pill ok">EVIDENCE</span> ×4</dd>
+        <dt>Activities</dt><dd>poll_customs_status · assess_risk</dd>
+        <dt>Leak</dt><dd><span class="pill">LEAK 02</span> exam window, documented daily</dd>
+        <dt>Cash</dt><dd>$325 · $325 · $325 · $450 accruing</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D17</span><span class="cal">Mar 12</span><span class="t">Customs releases — priority flips</span><span class="cash bad">$2,125 cumulative</span></div>
+    <div class="day-body">
+      <p>The hold clears after nine days. The <code>hold_released</code> signal wakes the workflow immediately rather than at the next scheduled checkpoint — the difference between reacting in seconds and reacting tomorrow morning, which at $575 a day is worth having.</p>
+      <p>The agent lifts intervention suppression, recomputes, and re-ranks this container to the top of the fleet: it is now in the highest tier, every further day costs $450 plus $250, and action is finally possible.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">SIGNAL</span> hold_released → immediate reassessment</dd>
+        <dt>Activities</dt><dd>assess_risk · reserve_appointment</dd>
+        <dt>State set</dt><dd>holds = {}, intervention_suppressed = False, priority = P1</dd>
+        <dt>Evidence</dt><dd>ace::CET-88213 released_at — closes the leak-02 window</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D18–20</span><span class="cal">Mar 13–15</span><span class="t">No appointment slots — the expensive days</span><span class="cash bad">$4,100 cumulative</span></div>
+    <div class="day-body">
+      <p>The terminal's appointment system has nothing. The Negotiator scans continuously rather than trying once a day — a real operational practice, and here it doubles as an evidence machine.</p>
+      <p><strong>Every failed attempt is written to history with a timestamp.</strong> This is the single most valuable by-product in the entire system. These three days cost $1,225 — nearly half the demurrage bill — and they are the strongest claim available, because the billing party's own invoice will certify that its performance did not contribute to the charge.</p>
+      <p>The saga matters here too. The agent books drayage first, then tries for a slot. No slot means the drayage booking must be unwound, or the importer eats a no-show fee that the agent itself created.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">TIMER</span> sleep(20min) scan loop · <span class="pill ok">SAGA</span> · <span class="pill ok">EVIDENCE</span> ×~200</dd>
+        <dt>Activities</dt><dd>reserve_appointment → None · book_drayage · cancel_drayage</dd>
+        <dt>Evidence</dt><dd>appt-attempt::MSKU7481920::&lt;ts&gt; for every failure</dd>
+        <dt>Leak</dt><dd><span class="pill">LEAK 03</span> terminal capacity failure</dd>
+        <dt>Cash</dt><dd>$1,225 accrued — and $1,225 now provable</dd>
+      </dl>
+      <p><strong>Build note.</strong> Rate-limit the scan at the worker level, not in workflow code. One task queue with a concurrency cap gives you fleet-wide politeness toward the terminal API without any coordination between the ten thousand workflows doing it.</p>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D20</span><span class="cal">Mar 15, 14:00</span><span class="t">Gate-out — the clocks swap</span><span class="cash bad">$4,100 locked in</span></div>
+    <div class="day-body">
+      <p>A slot opens in the afternoon. The box leaves. <code>DemurrageArc</code> closes and returns its evidence bundle to the parent; <code>DetentionArc</code> is spawned in the same step.</p>
+      <p><strong>This is the moment the human process stops paying attention and the agent does not.</strong> Everything that follows — a third of the total bill — exists purely because nobody watches the second clock.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">SIGNAL</span> gate_out · <span class="pill ok">CHILD</span> DetentionArc</dd>
+        <dt>Activities</dt><dd>fetch_eir (gate receipt, primary evidence)</dd>
+        <dt>State set</dt><dd>gated_out_at = D20, detention_due = D25</dd>
+        <dt>Handoff</dt><dd>8 days demurrage + 9 days storage evidence → parent</dd>
+      </dl>
+<pre><span class="k">await</span> workflow.start_child_workflow(
+    DetentionArc.run, args=[container, terms],
+    id=<span class="s">f"detention::{container.container_id}"</span>,
+    parent_close_policy=ParentClosePolicy.ABANDON)</pre>
+    </div>
+  </div>
+</section>
+
+<section id="s7">
+  <div class="sec-head"><span class="idx">07</span><h2>Phase 3 — days 20–31, detention</h2></div>
+
+  <p>The only phase where the agent changes the outcome rather than documenting it. Everything here is prevention, and prevention is worth more per dollar than recovery because it carries no dispute risk at all.</p>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D21</span><span class="cal">Mar 16</span><span class="t">Empty return booked — the decisive action</span><span class="cash good">−$1,485 avoided</span></div>
+    <div class="day-body">
+      <p>One day after gate-out, before the cargo is even unloaded, the Strategist prices the second clock. Its options table looks like this:</p>
+      <table>
+        <tr><th>Option</th><th class="r">Cost</th><th class="r">P(success)</th><th class="r">Expected saving</th></tr>
+        <tr><td>Do nothing, return when convenient</td><td class="r">$0</td><td class="r">—</td><td class="r">$0</td></tr>
+        <tr class="hot"><td>Pre-book return slot for D23</td><td class="r">$0</td><td class="r">0.90</td><td class="r good">$1,485</td></tr>
+        <tr><td>Expedite unload to free the box sooner</td><td class="r">$180</td><td class="r">0.95</td><td class="r">$1,340</td></tr>
+      </table>
+      <p>The winning move costs nothing. It is not a clever optimisation — it is simply the consequence of somebody, or something, still watching. The learning store contributes the decisive prior: this depot has issued return restrictions three times in the last ninety days, so slack is expensive here.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">ACTIVITY</span> assess_risk · book_empty_return · <span class="pill ok">SAGA</span></dd>
+        <dt>State set</dt><dd>return_slot = D23 09:00, compensator registered</dd>
+        <dt>Leak</dt><dd><span class="pill">LEAK 04</span> — closed before it opens</dd>
+        <dt>Cash</dt><dd><strong>$1,485 prevented</strong> — detention $1,125 + chassis $360</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D22</span><span class="cal">Mar 17</span><span class="t">Cargo delivered and stripped</span><span class="cash mute">$0</span></div>
+    <div class="day-body">
+      <p>The <code>cargo_stripped</code> signal confirms the box is empty and the booked slot is still valid. In the unmanaged process this is the moment the container disappears from everyone's mental model.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">SIGNAL</span> cargo_stripped</dd>
+        <dt>Activities</dt><dd>confirm_return_slot</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D23</span><span class="cal">Mar 18</span><span class="t">Empty accepted — DetentionArc closes</span><span class="cash good">$0 · two days inside free time</span></div>
+    <div class="day-body">
+      <p>The empty goes back and is accepted, two days before the free time expires on day 25. The detention clock never starts. The chassis goes back with it.</p>
+      <p>The EIR is captured as evidence anyway — not for a dispute, but so the counterfactual ledger can later prove the return actually happened on the day the agent claims credit for.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">SIGNAL</span> empty_returned → child completes</dd>
+        <dt>Activities</dt><dd>fetch_eir</dd>
+        <dt>Cash</dt><dd>detention $0 of $1,125 · chassis $0 of $360</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D24–29</span><span class="cal">Mar 19–24</span><span class="t">Carrier return restriction — the near miss</span><span class="cash good">avoided by 1 day</span></div>
+    <div class="day-body">
+      <p>The carrier announces it will not accept empties at this depot. In the unmanaged timeline this is where $1,485 is born: the trucker drives out, is turned away, and parks the box in his yard while detention and chassis both accrue.</p>
+      <p>Our container went back yesterday. The agent still ingests the advisory, matches it to the depot, and files it as a <strong>near miss</strong> — a labelled training signal for the learning store, which raises the return-urgency prior for this depot on every future container.</p>
+      <p>This is worth showing on stage. The agent did not predict the restriction. It bought slack cheaply because slack was free, and the restriction validated the choice.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">SIGNAL</span> carrier_advisory → matched, no action</dd>
+        <dt>Activities</dt><dd>classify_advisory (LLM) · record_near_miss</dd>
+        <dt>Leak</dt><dd><span class="pill">LEAK 04</span> would have cost $1,485</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D31</span><span class="cal">Mar 26</span><span class="t">Counterfactual scored</span><span class="cash good">prediction confirmed</span></div>
+    <div class="day-body">
+      <p>The date the empty would have gone back under the unmanaged path. The agent scores its day-21 prediction against what actually happened at the depot and writes the result to the learning store.</p>
+      <p>The dashboard does not claim $1,485 in savings. It evidences it — and when the agent is wrong, the same mechanism shows that too.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">TIMER</span> counterfactual scoring checkpoint</dd>
+        <dt>Activities</dt><dd>score_counterfactual · record_outcome</dd>
+        <dt>Metric</dt><dd>intervention precision, prediction calibration</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section id="s8">
+  <div class="sec-head"><span class="idx">08</span><h2>Phase 4 — days 32–45, dispute</h2></div>
+
+  <p>The container has been gone for two weeks. The agent is still working, and this is the phase no session-shaped system can reach at all.</p>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D33</span><span class="cal">Mar 28</span><span class="t">Case pre-assembled, before any invoice exists</span><span class="cash mute">$0</span></div>
+    <div class="day-body">
+      <p>The Case Builder assembles the full chronology from the parent's evidence bundle while the invoice is still weeks away. Every claim carries a <code>source_document_id</code>; anything without one is dropped at assembly time, not argued about in a prompt.</p>
+      <p>The draft argues three things: the effective LFD should have been day 14, not day 12; days 18–20 were caused by terminal capacity; and days 13–17 were a period during which the importer was legally forbidden to act.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">TIMER</span> post-return checkpoint</dd>
+        <dt>Activities</dt><dd>build_evidence_chronology · draft_dispute_letter (LLM)</dd>
+        <dt>Guardrail</dt><dd>no citation → claim removed, enforced in code</dd>
+        <dt>Leak</dt><dd><span class="pill">LEAK 06</span> pre-empted by ~7 days</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D40</span><span class="cal">Apr 4</span><span class="t">Demurrage and storage invoices arrive</span><span class="cash bad">$4,100 billed</span></div>
+    <div class="day-body">
+      <p>Two invoices from two companies. Each spawns its own <code>DisputeArc</code> with <code>ParentClosePolicy.ABANDON</code>, so each can run for months independently of everything else.</p>
+      <p>The Auditor recomputes from first principles and runs the regulatory checklist. In this container it finds a missing certification field on the carrier invoice — the statement that the billing party's own performance did not contribute to the charge. Under the FMC rules, omitting required content eliminates the obligation to pay that charge.</p>
+      <p>That single check, which takes an LLM about eight seconds, is worth more than every clever forecast in the system.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">SIGNAL</span> invoice_received · <span class="pill ok">CHILD</span> DisputeArc ×2 (ABANDON)</dd>
+        <dt>Activities</dt><dd>parse_invoice · audit_invoice · check_part_541</dd>
+        <dt>Findings</dt><dd>certification field absent · tier applied from nominal LFD</dd>
+        <dt>Timer set</dt><dd>dispute window closes D70</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D41</span><span class="cal">Apr 5</span><span class="t">First dispute filed</span><span class="cash good">$3,150 contested</span></div>
+    <div class="day-body">
+      <p>Filed within 24 hours of receipt, with the chronology already attached. Compare the unmanaged path, where day 41 is when the invoice enters an approval queue and nobody has yet looked at whether the charge is even valid.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">ACTIVITY</span> submit_dispute → case_ref</dd>
+        <dt>State set</dt><dd>filed_at, follow_up_cadence = 5 days</dd>
+        <dt>Cash</dt><dd>$3,150 strong claim + $600 arguable now in play</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D43</span><span class="cal">Apr 7</span><span class="t">Detention invoice — for a charge that does not exist</span><span class="cash good">rejected same day</span></div>
+    <div class="day-body">
+      <p>A detention invoice arrives anyway. Mis-billing happens, and in the unmanaged process it gets paid, because nobody can quickly prove when the empty went back.</p>
+      <p>The agent has the EIR from day 23. The rebuttal is one activity and one document, sent the same day.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">SIGNAL</span> invoice_received · <span class="pill ok">CHILD</span> DisputeArc</dd>
+        <dt>Evidence</dt><dd>eir::MSKU7481920::D23 — empty accepted, 2 days inside free time</dd>
+        <dt>Cash</dt><dd>$1,125 rejected outright</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="day-head"><span class="d">D45</span><span class="cal">Apr 9</span><span class="t">Follow-up cadence begins</span><span class="cash mute">in flight</span></div>
+    <div class="day-body">
+      <p>The 45-day frame ends here, but the workflow does not. A durable 5-day timer races against a <code>carrier_replied</code> signal. Whichever arrives first advances the case; the loop runs six times before escalating to a human.</p>
+      <p><strong>The dispute window cannot quietly expire.</strong> Not because anyone remembers, but because a timer set on day 40 will fire on day 68 whether the team remembers or not.</p>
+      <dl class="spec">
+        <dt>Primitive</dt><dd><span class="pill ok">TIMER</span> sleep(5d) raced against <span class="pill ok">SIGNAL</span> carrier_replied</dd>
+        <dt>Activities</dt><dd>follow_up_dispute · evaluate_settlement</dd>
+        <dt>Guardrail</dt><dd>settlement below 70% of claim escalates to a human</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section id="s9">
+  <div class="sec-head"><span class="idx">09</span><h2>The tail — days 46–90</h2></div>
+
+  <p>Worth documenting even though it falls outside the 45-day frame, because it is where recovery actually lands and where the "why Temporal" argument is strongest.</p>
+
+  <table>
+    <tr><th class="mono">Day</th><th>Event</th><th>Primitive</th><th class="r">Cash</th></tr>
+    <tr><td class="mono">50</td><td>Carrier acknowledges, requests further documentation</td><td>signal → activity</td><td class="r mute">—</td></tr>
+    <tr><td class="mono">51</td><td>Agent supplies appointment-failure log and EIR from stored evidence</td><td>activity</td><td class="r mute">—</td></tr>
+    <tr><td class="mono">58</td><td>Terminal concedes the storage recomputation</td><td>signal</td><td class="r good">+$975</td></tr>
+    <tr><td class="mono">64</td><td>Carrier offers partial settlement at 62% of claim</td><td>signal → evaluate</td><td class="r mute">below mandate</td></tr>
+    <tr><td class="mono">65</td><td>Escalated to a human, who accepts at 71% after one call</td><td>signal approval</td><td class="r good">+$1,230</td></tr>
+    <tr><td class="mono">70</td><td>Dispute window closes — timer confirms all cases filed in time</td><td>timer</td><td class="r mute">—</td></tr>
+    <tr><td class="mono">88</td><td>Final case closes; outcome written to learning store</td><td>activity</td><td class="r mute">—</td></tr>
+    <tr class="tot"><td colspan="3">Recovered on the tail</td><td class="r good">$2,205</td></tr>
+  </table>
+
+  <p>Note the shape: the container was returned on day 23, and the money arrives on day 65. <strong>The agent outlived the physical event by six weeks.</strong> No session-based system reaches day 65, and no cron job holds the evidence needed to answer the day-50 request.</p>
+</section>
+
+<section id="s10">
+  <div class="sec-head"><span class="idx">10</span><h2>Master table, all 45 days</h2></div>
+
+  <p>Every day, including the quiet ones. Highlighted rows are days where the agent changes the outcome rather than observing it.</p>
+
+  <table>
+    <tr><th class="mono">Day</th><th class="mono">Date</th><th>What happens</th><th>Temporal primitive</th><th class="mono">Leak</th><th class="r">Today</th><th class="r">Agent</th></tr>
+    <tr><td class="mono">1</td><td class="mono">Feb 24</td><td>Arrival notice · ContainerWorkflow starts · contract terms extracted</td><td>start, deterministic ID</td><td class="mono">05</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">2</td><td class="mono">Feb 25</td><td>Asleep</td><td>wait_condition</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">3</td><td class="mono">Feb 26</td><td>Asleep</td><td>wait_condition</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">4</td><td class="mono">Feb 27</td><td>Customs entry filed in advance · recorded as pre-emptive defence</td><td>signal</td><td class="mono">02</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">5</td><td class="mono">Feb 28</td><td>Vessel ETA polled</td><td>timer 12h</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">6</td><td class="mono">Mar 1</td><td>ETA polled · terminal slot-scarcity priors fetched</td><td>timer + activity</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">7</td><td class="mono">Mar 2</td><td>ETA polled · drayage provisionally booked</td><td>timer + activity</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">8</td><td class="mono">Mar 3</td><td><strong>Discharge</strong> · DemurrageArc spawned · nominal LFD = D12</td><td>signal + child</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">9</td><td class="mono">Mar 4</td><td>CET exam hold placed · intervention suppressed · box still ungrounded</td><td>signal</td><td class="mono">01 02</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr class="hot"><td class="mono">10</td><td class="mono">Mar 5</td><td>Availability confirmed after 12 failed polls · <strong>effective LFD shifted to D14</strong></td><td>activity + evidence</td><td class="mono">01</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">11</td><td class="mono">Mar 6</td><td>Terminal storage free time expires (3 days, shorter than the carrier's)</td><td>timer</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">12</td><td class="mono">Mar 7</td><td>Demurrage LFD · storage begins · three checkpoints already fired</td><td>timer ×3 + LLM</td><td class="mono">05</td><td class="r">$125</td><td class="r">$125</td></tr>
+    <tr><td class="mono">13</td><td class="mono">Mar 8</td><td>Demurrage begins · exam continues · daily evidence line written</td><td>timer 24h</td><td class="mono">02</td><td class="r">$325</td><td class="r">$325</td></tr>
+    <tr><td class="mono">14</td><td class="mono">Mar 9</td><td>Exam continues</td><td>timer + evidence</td><td class="mono">02</td><td class="r">$325</td><td class="r">$325</td></tr>
+    <tr><td class="mono">15</td><td class="mono">Mar 10</td><td>Exam continues</td><td>timer + evidence</td><td class="mono">02</td><td class="r">$325</td><td class="r">$325</td></tr>
+    <tr><td class="mono">16</td><td class="mono">Mar 11</td><td>Demurrage enters tier 2</td><td>timer + evidence</td><td class="mono">02</td><td class="r">$450</td><td class="r">$450</td></tr>
+    <tr><td class="mono">17</td><td class="mono">Mar 12</td><td><strong>Customs releases</strong> · suppression lifted · container re-ranked to P1</td><td>signal → immediate</td><td class="mono">02</td><td class="r">$575</td><td class="r">$575</td></tr>
+    <tr class="hot"><td class="mono">18</td><td class="mono">Mar 13</td><td>No appointment slots · continuous scanning · every failure timestamped</td><td>timer 20min + saga</td><td class="mono">03</td><td class="r">$575</td><td class="r">$575</td></tr>
+    <tr class="hot"><td class="mono">19</td><td class="mono">Mar 14</td><td>No slots · demurrage enters tier 3 · evidence accumulating</td><td>timer + evidence</td><td class="mono">03</td><td class="r">$700</td><td class="r">$700</td></tr>
+    <tr class="hot"><td class="mono">20</td><td class="mono">Mar 15</td><td><strong>Gate-out</strong> · DemurrageArc closes · DetentionArc spawned · EIR captured</td><td>signal + child</td><td class="mono">03</td><td class="r">$700</td><td class="r">$700</td></tr>
+    <tr class="hot"><td class="mono">21</td><td class="mono">Mar 16</td><td><strong>Empty return booked for D23</strong> — the decisive action, and it costs nothing</td><td>LLM + activity + saga</td><td class="mono">04</td><td class="r">$0</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">22</td><td class="mono">Mar 17</td><td>Cargo delivered and stripped · return slot confirmed</td><td>signal</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr class="hot"><td class="mono">23</td><td class="mono">Mar 18</td><td><strong>Empty accepted, 2 days inside free time</strong> · DetentionArc closes</td><td>signal → complete</td><td class="mono">04</td><td class="r">$0</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">24</td><td class="mono">Mar 19</td><td>Carrier return restriction begins · advisory classified as near miss</td><td>signal</td><td class="mono">04</td><td class="r bad">$45</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">25</td><td class="mono">Mar 20</td><td>Detention free time would have expired</td><td>timer</td><td class="mono">04</td><td class="r bad">$45</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">26</td><td class="mono">Mar 21</td><td>Detention accrues in the unmanaged path</td><td>—</td><td class="mono">04</td><td class="r bad">$195</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">27</td><td class="mono">Mar 22</td><td>Detention accrues</td><td>—</td><td class="mono">04</td><td class="r bad">$195</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">28</td><td class="mono">Mar 23</td><td>Detention accrues</td><td>—</td><td class="mono">04</td><td class="r bad">$195</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">29</td><td class="mono">Mar 24</td><td>Restriction lifts · detention enters tier 2</td><td>signal</td><td class="mono">04</td><td class="r bad">$270</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">30</td><td class="mono">Mar 25</td><td>Detention accrues</td><td>—</td><td class="mono">04</td><td class="r bad">$270</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">31</td><td class="mono">Mar 26</td><td>Empty accepted in the unmanaged path · agent scores its counterfactual</td><td>timer + activity</td><td class="mono">04</td><td class="r bad">$270</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">32</td><td class="mono">Mar 27</td><td>Asleep</td><td>wait_condition</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr class="hot"><td class="mono">33</td><td class="mono">Mar 28</td><td><strong>Case pre-assembled before any invoice exists</strong> · cited chronology drafted</td><td>timer + LLM</td><td class="mono">06</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">34–39</td><td class="mono">Mar 29 – Apr 3</td><td>Asleep · invoice-arrival timer armed</td><td>wait_condition</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr class="hot"><td class="mono">40</td><td class="mono">Apr 4</td><td>Demurrage + storage invoices · Part 541 audit · <strong>missing certification found</strong></td><td>signal + child ×2</td><td class="mono">06</td><td class="r bad">$4,100</td><td class="r">contested</td></tr>
+    <tr class="hot"><td class="mono">41</td><td class="mono">Apr 5</td><td>Dispute filed within 24 hours, evidence already attached</td><td>activity</td><td class="mono">06</td><td class="r">—</td><td class="r good">$3,150 in play</td></tr>
+    <tr><td class="mono">42</td><td class="mono">Apr 6</td><td>Asleep · follow-up timer armed</td><td>timer 5d</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr class="hot"><td class="mono">43</td><td class="mono">Apr 7</td><td>Detention invoice arrives for a charge that never accrued · rejected same day with the D23 EIR</td><td>signal + child</td><td class="mono">04 07</td><td class="r bad">$1,125</td><td class="r good">$0</td></tr>
+    <tr><td class="mono">44</td><td class="mono">Apr 8</td><td>Audit complete on all three invoices · findings written to learning store</td><td>activity</td><td class="mono">—</td><td class="r">$0</td><td class="r">$0</td></tr>
+    <tr><td class="mono">45</td><td class="mono">Apr 9</td><td>Follow-up cadence begins · dispute-window timer set for D70</td><td>timer raced vs signal</td><td class="mono">06</td><td class="r">—</td><td class="r">in flight</td></tr>
+    <tr class="tot"><td colspan="5">Total across 45 days</td><td class="r bad">$5,585</td><td class="r good">$1,895 net</td></tr>
+  </table>
+</section>
+
+<section id="s11">
+  <div class="sec-head"><span class="idx">11</span><h2>Cash leak ledger</h2></div>
+
+  <p>The same $5,585, sliced by leak rather than by day. This is the table to put on a slide.</p>
+
+  <table>
+    <tr><th class="mono">Leak</th><th>Name</th><th class="mono">Days</th><th>Mechanism</th><th class="r">Exposure</th><th>Agent outcome</th></tr>
+    <tr><td class="mono">01</td><td>Clock started before you could act</td><td class="mono">8–10</td><td>Two free days consumed while the box was ungrounded, pushing the whole delay two tiers deeper</td><td class="r bad">$900</td><td>Effective LFD shifted, gap cited — <strong>contested</strong></td></tr>
+    <tr><td class="mono">02</td><td>Billed while forbidden to move</td><td class="mono">13–17</td><td>Five demurrage days during a CET exam at a CES facility</td><td class="r bad">$1,050</td><td>Window documented daily — <strong>arguable</strong></td></tr>
+    <tr><td class="mono">03</td><td>Terminal capacity failure</td><td class="mono">18–20</td><td>Three top-tier days with no appointment slots — nearly half the demurrage bill</td><td class="r bad">$1,225</td><td>Every failure timestamped — <strong>strong claim</strong></td></tr>
+    <tr class="hot"><td class="mono">04</td><td>Detention on a refused empty</td><td class="mono">24–31</td><td>Six detention days plus eight chassis days, entirely because nobody watched the second clock</td><td class="r bad">$1,485</td><td>Returned on D23 — <strong>prevented outright</strong></td></tr>
+    <tr><td class="mono">05</td><td>Deadline never known</td><td class="mono">1–12</td><td>Three allowances expiring on three different days, none of them triggering anything</td><td class="r bad">enabling</td><td>All three tracked from D1 — <strong>closed</strong></td></tr>
+    <tr><td class="mono">06</td><td>Dispute window closed first</td><td class="mono">40–70</td><td>Invoices arrive five weeks late into a 30-day window nobody starts</td><td class="r bad">all of it</td><td>Filed on D41 with evidence attached — <strong>closed</strong></td></tr>
+    <tr><td class="mono">07</td><td>Paid under duress, never revisited</td><td class="mono">43+</td><td>Charges paid to release cargo, with intent to dispute that nothing carries forward</td><td class="r bad">unmeasured</td><td>Protest held as workflow state — <strong>closed</strong></td></tr>
+    <tr><td class="mono">—</td><td>Storage, residual</td><td class="mono">12–20</td><td>Terminal storage overlapping the above causes</td><td class="r">$925</td><td>Recomputed and partly conceded</td></tr>
+    <tr class="tot"><td colspan="4">Total billed</td><td class="r bad">$5,585</td><td>≈ $3,690 prevented or recovered</td></tr>
+  </table>
+
+  <div class="note">
+    <span class="label">The one-line version</span>
+    <p>Leak 04 is prevented, leaks 01 and 03 are contested with evidence the agent produced as a by-product of trying, and leaks 05, 06 and 07 are structural — they close simply because something is awake for 45 days.</p>
+  </div>
+</section>
+
+<section id="s12">
+  <div class="sec-head"><span class="idx">12</span><h2>Signal &amp; timer reference</h2></div>
+
+  <h3>Signals</h3>
+  <table>
+    <tr><th class="mono">Signal</th><th>Fires on</th><th>Target</th><th>Effect</th></tr>
+    <tr><td class="mono">customs_entry_filed</td><td>D4</td><td>Container</td><td>Records pre-emptive defence evidence</td></tr>
+    <tr><td class="mono">discharged</td><td>D8</td><td>Container</td><td>Releases the pre-arrival wait; spawns DemurrageArc</td></tr>
+    <tr><td class="mono">hold_placed</td><td>D9</td><td>Demurrage</td><td>Suppresses intervention; opens defensible window</td></tr>
+    <tr><td class="mono">hold_released</td><td>D17</td><td>Demurrage</td><td>Immediate reassessment; re-rank to P1</td></tr>
+    <tr><td class="mono">gate_out</td><td>D20</td><td>Demurrage</td><td>Closes the arc; spawns DetentionArc</td></tr>
+    <tr><td class="mono">cargo_stripped</td><td>D22</td><td>Detention</td><td>Confirms the booked return slot</td></tr>
+    <tr><td class="mono">carrier_advisory</td><td>D24</td><td>Detention</td><td>Matched to depot; near miss or urgent action</td></tr>
+    <tr><td class="mono">empty_returned</td><td>D23</td><td>Detention</td><td>Closes the arc</td></tr>
+    <tr><td class="mono">invoice_received</td><td>D40, D43</td><td>Container</td><td>Spawns one DisputeArc per invoice</td></tr>
+    <tr><td class="mono">carrier_replied</td><td>D50+</td><td>Dispute</td><td>Advances or closes the case</td></tr>
+    <tr><td class="mono">approve</td><td>any</td><td>any</td><td>Releases a parked workflow</td></tr>
+  </table>
+
+  <h3>Timers</h3>
+  <table>
+    <tr><th class="mono">Timer</th><th class="mono">Interval</th><th>Phase</th><th>Purpose</th></tr>
+    <tr><td class="mono">eta_poll</td><td class="mono">12h</td><td>D5–7</td><td>Detect schedule drift before arrival</td></tr>
+    <tr><td class="mono">availability_poll</td><td class="mono">4h</td><td>D8–10</td><td>Detect grounding; every miss is evidence</td></tr>
+    <tr><td class="mono">lfd_checkpoint</td><td class="mono">−72h, −48h, −24h</td><td>D9–12</td><td>Price options while action is still cheap</td></tr>
+    <tr><td class="mono">daily_reassess</td><td class="mono">24h</td><td>D13–17</td><td>Record the blocked state; re-forecast</td></tr>
+    <tr><td class="mono">slot_scan</td><td class="mono">20min</td><td>D17–20</td><td>Catch releases; log every failure</td></tr>
+    <tr><td class="mono">return_watch</td><td class="mono">12h</td><td>D20–23</td><td>Confirm slot still valid; detect restrictions</td></tr>
+    <tr><td class="mono">counterfactual_score</td><td class="mono">at D31</td><td>D31</td><td>Grade the day-21 prediction against reality</td></tr>
+    <tr><td class="mono">invoice_watch</td><td class="mono">24h</td><td>D32–45</td><td>Detect arrival; also detect a <em>late</em> invoice, which is itself a defence</td></tr>
+    <tr><td class="mono">follow_up</td><td class="mono">5d ×6</td><td>D45+</td><td>Chase the carrier on a cadence nobody has to remember</td></tr>
+    <tr><td class="mono">dispute_deadline</td><td class="mono">at D70</td><td>D40–70</td><td>Hard backstop; escalates if unresolved</td></tr>
+  </table>
+
+  <p><strong>Note the invoice watch.</strong> It is not only looking for arrival. An invoice issued more than 30 days after the last incurred charge is itself unenforceable, so a timer that notices <em>nothing arrived</em> is as valuable as one that notices something did.</p>
+</section>
+
+<section id="s13">
+  <div class="sec-head"><span class="idx">13</span><h2>Workflow state at each phase</h2></div>
+
+  <p>What the agent is holding in memory at each point. This is the "workflow is the memory" argument made concrete — no vector store, no cache, no projection table.</p>
+
+  <table>
+    <tr><th class="mono">Phase</th><th>State held</th><th>Query returns</th></tr>
+    <tr><td class="mono">D1–7</td><td>terms, identity, projected_lfd, slot_scarcity_prior</td><td>PENDING · "awaiting discharge"</td></tr>
+    <tr><td class="mono">D8–12</td><td>+ discharged_at, availability polls, effective_lfd, holds, counterfactual_usd</td><td>RED · "blocked: customs exam" · exposure $2,475</td></tr>
+    <tr><td class="mono">D13–20</td><td>+ daily evidence lines, ~200 appointment-failure records, intervention log</td><td>RED · "no slots, scanning" · evidence 94% complete</td></tr>
+    <tr><td class="mono">D20–23</td><td>+ gated_out_at, EIR, return_slot, saga compensators</td><td>GREEN · "empty booked D23" · $1,485 prevented</td></tr>
+    <tr><td class="mono">D24–39</td><td>+ near-miss record, counterfactual score, assembled chronology</td><td>CLOSED · awaiting invoice</td></tr>
+    <tr><td class="mono">D40–45</td><td>+ invoices, Part 541 findings, case refs, dispute timers</td><td>DISPUTED · $3,150 in play · window closes D70</td></tr>
+  </table>
+
+  <p>Every one of those rows is readable from a live workflow with a single query, and every one is reconstructable from event history after the fact. That equivalence — live state and audit trail being the same object — is the property that makes the dispute defensible.</p>
+</section>
+
+<section id="s14">
+  <div class="sec-head"><span class="idx">14</span><h2>Time-skipping test plan</h2></div>
+
+  <p>Temporal's time-skipping environment runs all 45 days in about a second of wall clock. Write these as tests first; the demo is then just the test with a UI attached.</p>
+
+<pre><span class="k">async def</span> test_full_lifecycle(env: WorkflowEnvironment):
+    handle = <span class="k">await</span> env.client.start_workflow(ContainerWorkflow.run, container, ...)
+
+    <span class="c"># D8 — discharge</span>
+    <span class="k">await</span> env.sleep(timedelta(days=7))
+    <span class="k">await</span> handle.signal(ContainerWorkflow.discharged, discharge_event)
+
+    <span class="c"># D9 — hold placed; assert the agent does NOT spend</span>
+    <span class="k">await</span> env.sleep(timedelta(days=1))
+    <span class="k">await</span> handle.signal(ContainerWorkflow.hold_placed, cet_hold)
+    state = <span class="k">await</span> handle.query(ContainerWorkflow.state)
+    <span class="k">assert</span> state[<span class="s">"intervention_suppressed"</span>] <span class="k">is</span> <span class="k">True</span>
+    <span class="k">assert</span> state[<span class="s">"spend_usd"</span>] == 0        <span class="c"># the key anti-waste assertion</span>
+
+    <span class="c"># D10 — availability lands late; effective LFD must shift</span>
+    <span class="k">await</span> env.sleep(timedelta(days=1))
+    <span class="k">assert</span> state[<span class="s">"effective_lfd"</span>] == day(14)   <span class="c"># not day(12)</span>
+
+    <span class="c"># D20 — gate out spawns the detention arc</span>
+    <span class="k">await</span> env.sleep(timedelta(days=10))
+    <span class="k">await</span> handle.signal(ContainerWorkflow.gate_out, gate_event)
+
+    <span class="c"># D21 — the decisive assertion of the whole system</span>
+    <span class="k">await</span> env.sleep(timedelta(days=1))
+    det = env.client.get_workflow_handle(<span class="s">f"detention::{cid}"</span>)
+    <span class="k">assert</span> (<span class="k">await</span> det.query(<span class="s">"state"</span>))[<span class="s">"return_slot"</span>] <span class="k">is not</span> <span class="k">None</span>
+
+    <span class="c"># D24 — restriction arrives after the box is already back</span>
+    <span class="k">await</span> env.sleep(timedelta(days=3))
+    <span class="k">await</span> det.signal(<span class="s">"carrier_advisory"</span>, restriction)
+    <span class="k">assert</span> (<span class="k">await</span> det.query(<span class="s">"state"</span>))[<span class="s">"detention_days"</span>] == 0
+
+    <span class="c"># D40 — non-compliant invoice must be caught</span>
+    <span class="k">await</span> env.sleep(timedelta(days=16))
+    <span class="k">await</span> handle.signal(ContainerWorkflow.invoice_received, invoice_missing_cert)
+    dispute = env.client.get_workflow_handle(<span class="s">f"dispute::{inv_id}"</span>)
+    <span class="k">assert</span> <span class="s">"certification_absent"</span> <span class="k">in</span> (<span class="k">await</span> dispute.query(<span class="s">"findings"</span>))</pre>
+
+  <h3>The five assertions that matter</h3>
+  <table>
+    <tr><th class="mono">Day</th><th>Assertion</th><th>What it proves</th></tr>
+    <tr><td class="mono">9</td><td>spend == $0 while a hold is open</td><td>The agent does not burn money to look busy</td></tr>
+    <tr><td class="mono">10</td><td>effective_lfd == D14, not D12</td><td>Leak 01 is detected, not assumed away</td></tr>
+    <tr><td class="mono">18–20</td><td>appointment_failures recorded ≥ 3</td><td>Evidence is produced by trying, not by remembering</td></tr>
+    <tr><td class="mono">21</td><td>return_slot booked before D24</td><td>The $1,485 prevention actually fires</td></tr>
+    <tr><td class="mono">40</td><td>Part 541 defect detected</td><td>The audit finds what a human skims past</td></tr>
+  </table>
+</section>
+
+<section id="s15">
+  <div class="sec-head"><span class="idx">15</span><h2>Failure injection points</h2></div>
+
+  <p>Build these in deliberately. Each one is both a real production condition and a demo moment.</p>
+
+  <table>
+    <tr><th class="mono">Day</th><th>Injected failure</th><th>Correct behaviour</th><th>Primitive under test</th></tr>
+    <tr><td class="mono">10</td><td>Terminal portal returns 503 for six hours</td><td>Activity retries with backoff; polls resume; no gap in the evidence chain</td><td>Retry policy</td></tr>
+    <tr><td class="mono">18</td><td>Drayage booked, then customs re-holds the box</td><td>Saga unwinds: booking cancelled, slot released, no no-show fee</td><td>Compensation</td></tr>
+    <tr><td class="mono">19</td><td><strong>Worker killed mid-scan</strong></td><td>Workflow resumes on the same container, same step, memory intact</td><td>Durable execution</td></tr>
+    <tr><td class="mono">21</td><td>Return booking exceeds the spend cap</td><td>Workflow parks on a signal indefinitely; resumes on Slack approval</td><td>Approval gate</td></tr>
+    <tr><td class="mono">33</td><td>An evidence item has no source_document_id</td><td>Claim dropped at assembly; it never reaches the dispute letter</td><td>Guardrail</td></tr>
+    <tr><td class="mono">40</td><td>New agent logic deployed while the workflow is mid-flight</td><td>In-flight workflow continues on its original path; new ones take the new one</td><td>Versioning</td></tr>
+    <tr><td class="mono">50</td><td>Carrier never replies</td><td>Follow-up fires six times, then escalates before the D70 deadline</td><td>Timer raced vs signal</td></tr>
+  </table>
+
+  <div class="note">
+    <span class="label">The demo moment</span>
+    <p>Run the day-19 kill live. Freeze, wait three uncomfortable seconds, restart, and let the agent pick up mid-scan. Every judge has watched an LLM agent die and lose everything; this is the ten seconds that lands.</p>
+  </div>
+</section>
+
+<section id="s16">
+  <div class="sec-head"><span class="idx">16</span><h2>Build order</h2></div>
+
+  <p>Build in this sequence and you have a demoable slice after step 3.</p>
+
+  <ol>
+    <li><strong>The spine.</strong> <code>ContainerWorkflow</code> plus the pre-arrival wait and <code>DemurrageArc</code>. Stub every activity. Prove a 45-day sleep works under time-skipping before writing a single prompt.</li>
+    <li><strong>The clocks.</strong> Three independent allowances, tier tables, effective-LFD calculation. Pure logic, fully unit-testable, no LLM involved.</li>
+    <li><strong>The decisive path.</strong> Gate-out → <code>DetentionArc</code> → empty-return booking. This is $1,485 of the story and the clearest demo beat. Get it working before anything else that involves reasoning.</li>
+    <li><strong>The evidence machine.</strong> Availability polls and slot scans writing cited failures to history. Cheap to build, and it is what makes the dispute possible later.</li>
+    <li><strong>The Strategist.</strong> The first real LLM activity: costed options plus a stored counterfactual.</li>
+    <li><strong>The saga and the approval gate.</strong> Compensation on the booking path, spend cap parking on a signal.</li>
+    <li><strong>The Auditor.</strong> Part 541 checklist plus tier and weekend recompute. Highest value per line of code in the entire system.</li>
+    <li><strong>The Case Builder and <code>DisputeArc</code>.</strong> Cited chronology, filing, follow-up cadence.</li>
+    <li><strong>The control tower.</strong> Fleet map from search attributes, per-container reasoning trace from queries, event history viewer beside it.</li>
+    <li><strong>The synthetic fleet.</strong> 200 containers with realistic distributions, plus the agents-on/agents-off toggle.</li>
+  </ol>
+
+  <div class="warn">
+    <span class="label">Sequencing trap</span>
+    <p>The temptation is to start with the LLM, because that is the interesting part. Do not. If the spine cannot sleep 45 days and survive a worker restart, no amount of good reasoning saves the demo — and the spine is a day's work, while debugging it under time pressure is not.</p>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
