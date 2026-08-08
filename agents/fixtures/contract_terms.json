@@ -1,0 +1,57 @@
+{
+  "contract_id": "SC-2026-0042",
+  "port": "USLAX",
+  "carrier": "Maersk",
+  "confidence": 0.91,
+  "source_document_id": "contract::SC-2026-0042",
+  "extraction_notes": [
+    "terminal storage allowance taken from the Pier 400 tariff, not the service contract",
+    "chassis per diem has no free time and no escalation"
+  ],
+  "clocks": {
+    "demurrage": {
+      "charge_type": "demurrage",
+      "billed_by": "Carrier",
+      "free_days": 4,
+      "counts_weekends": true,
+      "counts_holidays": true,
+      "tiers": [
+        { "from_day": 1, "to_day": 3, "rate_usd": "200" },
+        { "from_day": 4, "to_day": 6, "rate_usd": "325" },
+        { "from_day": 7, "to_day": null, "rate_usd": "450" }
+      ]
+    },
+    "storage": {
+      "charge_type": "storage",
+      "billed_by": "Terminal operator",
+      "free_days": 3,
+      "counts_weekends": true,
+      "counts_holidays": true,
+      "tiers": [
+        { "from_day": 1, "to_day": 5, "rate_usd": "125" },
+        { "from_day": 6, "to_day": null, "rate_usd": "250" }
+      ]
+    },
+    "detention": {
+      "charge_type": "detention",
+      "billed_by": "Carrier",
+      "free_days": 5,
+      "counts_weekends": true,
+      "counts_holidays": true,
+      "tiers": [
+        { "from_day": 1, "to_day": 3, "rate_usd": "150" },
+        { "from_day": 4, "to_day": null, "rate_usd": "225" }
+      ]
+    },
+    "chassis": {
+      "charge_type": "chassis",
+      "billed_by": "Chassis pool",
+      "free_days": 0,
+      "counts_weekends": true,
+      "counts_holidays": true,
+      "tiers": [
+        { "from_day": 1, "to_day": null, "rate_usd": "45" }
+      ]
+    }
+  }
+}

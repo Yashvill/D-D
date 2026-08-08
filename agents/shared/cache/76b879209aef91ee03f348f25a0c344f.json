@@ -1,0 +1,6 @@
+{
+  "model": "openrouter/openai/gpt-oss-20b:free",
+  "prompt": "CONTAINER\n  return depot: Oakland OICT\n  carrier:      Maersk\n  type:         40HC\n\nADVISORY\n--------\nCARRIER NOTICE: Effective immediately, the Oakland OICT depot is closed to empty 40HC returns due to yard congestion. Reefer returns unaffected. Expected to reopen next week.\n--------\n\nDoes this advisory restrict empty returns for this container at its depot?",
+  "response": "{\"affects_this_container\":true,\"depot\":\"Oakland OICT\",\"restriction_starts\":null,\"restriction_ends\":null,\"reasoning\":\"The advisory explicitly states that the Oakland OICT depot is closed to empty 40HC returns, which matches the container\u2019s return depot and type. Therefore the restriction applies to this container. The advisory does not provide a specific end date, so the restriction window is considered open-ended.\",\"confidence\":0.95}",
+  "cached_at": 1786203120.3194182
+}

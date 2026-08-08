@@ -1,0 +1,14 @@
+{
+  "invoice_id": "INV-DEM-88431",
+  "container_id": "MSKU7481920",
+  "subject": "Request for waiver of demurrage charges - invoice INV-DEM-88431, container MSKU7481920",
+  "body": "To the billing party:\n\nWe request mitigation, refund or waiver of the demurrage charges invoiced under INV-DEM-88431 in respect of container MSKU7481920, on the grounds set out below. This request is made within the period afforded by 46 CFR 541.\n\n1. Required certification absent.\nThe invoice omits the certification required by 46 CFR 541.6, namely the billing party's statement that the charges are consistent with Commission rules and that its own performance did not cause or contribute to the charge. Under 46 CFR 541.5, the omission of any applicable required content item eliminates the obligation to pay the charge. On this ground alone the full invoiced amount is not payable.\n\n2. Effective last free day understated.\nThe container was discharged on 3 March 2026 but was not grounded or appointable until 5 March 2026. Two of the four contracted free days were consumed by the terminal's own handling, during which no collection was possible by any party. The last free day should properly be calculated as 9 March 2026 rather than 7 March 2026. The intervening days are not attributable to the billed party.\n\n3. Charges caused by the billing party's own capacity failure.\nOn 13, 14 and 15 March 2026 the terminal's appointment system offered no available slot despite repeated attempts, each of which is recorded with its timestamp in our contemporaneous log. These days were billed at the highest tier of the applicable rate schedule. The absence of appointment capacity is a performance failure of the billing party and its terminal, not of the billed party.\n\n4. Charges accrued while the container was legally immovable.\nBetween 8 and 12 March 2026 the container was subject to a Contraband Enforcement Team examination and was routed to a Centralised Examination Station. During this window the container could not lawfully be collected. A charge that cannot alter the conduct of the billed party does not operate as an incentive and is not properly assessed.\n\nRelief requested: waiver of the charges itemised above, and reissue of any residual amount properly owed on a compliant invoice.\n\nSupporting documents are enumerated in the accompanying chronology and are available on request.",
+  "amount_contested_usd": "3150",
+  "citations": [
+    "invoice::INV-DEM-88431",
+    "46 CFR 541.6, 541.5",
+    "terminal::availability::MSKU7481920",
+    "ace::CET-88213"
+  ],
+  "drafted_at": "2026-04-05T09:15:00"
+}

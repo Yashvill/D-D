@@ -1,0 +1,6 @@
+{
+  "model": "openrouter/openai/gpt-oss-20b:free",
+  "prompt": "Reply with ONLY this JSON and nothing else: {\"answer\":\"ok\"}",
+  "response": "{\"answer\":\"ok\"}",
+  "cached_at": 1786202993.025498
+}

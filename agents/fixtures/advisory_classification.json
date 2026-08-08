@@ -1,0 +1,8 @@
+{
+  "affects_this_container": true,
+  "depot": "Fontana Empty Depot",
+  "restriction_starts": "2026-03-19",
+  "restriction_ends": "2026-03-24",
+  "reasoning": "The advisory names the Fontana empty depot and the carrier operating this container, and applies to dry equipment including 40HC. It states empties will not be accepted between 19 and 24 March. This container's designated return depot matches, so the restriction applies.",
+  "confidence": 0.88
+}
