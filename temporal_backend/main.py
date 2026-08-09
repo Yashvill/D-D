@@ -67,10 +67,20 @@ async def main() -> None:
         stats["fixtures"],
     )
     if stats["mode"] == "live":
-        log.warning(
-            "LLM_MODE=live - OpenRouter free tier allows 50 requests/day and "
-            "failed requests still count. Warm the cache, then switch to cache."
-        )
+        model = str(stats["model"])
+        if model.startswith("openrouter/"):
+            log.warning(
+                "LLM_MODE=live model=%s - OpenRouter free tier allows 50 "
+                "requests/day and failed requests still count. Warm the cache, "
+                "then switch to cache.",
+                model,
+            )
+        else:
+            log.warning(
+                "LLM_MODE=live model=%s - live calls burn quota/cost money on "
+                "every run. Warm the cache, then switch to cache.",
+                model,
+            )
 
     client = await connect()
 

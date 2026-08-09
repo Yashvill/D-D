@@ -310,7 +310,16 @@ class DetentionArc:
         self, container: ContainerInput, inp: DetentionInput, detention_due: date
     ) -> None:
         """Confirm the slot stays valid and classify advisories as they arrive."""
-        deadline = datetime.combine(detention_due, datetime.min.time()) + timedelta(days=14)
+        # Bounded so the arc cannot watch forever, but measured from whichever
+        # is later: the due date, or now. A domain deadline can already be in
+        # the past when the timeline is historical or the workflow started late,
+        # and abandoning the watch on entry would drop the return we are here to
+        # observe.
+        watch_days = timedelta(days=14)
+        deadline = max(
+            datetime.combine(detention_due, datetime.min.time()) + watch_days,
+            _now() + watch_days,
+        )
 
         while self.empty_returned_at is None and _now() < deadline:
             if self._pending_advisory is not None:

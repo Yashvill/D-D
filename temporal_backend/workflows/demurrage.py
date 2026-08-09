@@ -10,6 +10,7 @@ wall-clock reads outside ``workflow.now()``, no I/O. All of that is in activitie
 from __future__ import annotations
 
 import asyncio
+import os
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -67,6 +68,21 @@ SLOT_SCAN_INTERVAL = timedelta(minutes=20)
 DAILY = timedelta(hours=24)
 CHECKPOINT_OFFSETS_HOURS = (72, 48, 24)
 
+# Read once at worker start, not per-workflow-call: consistent across every
+# replay within this worker process, which is what determinism requires.
+#
+# Checkpoint targets are anchored to effective_lfd at midnight - a fixed
+# calendar instant - so merely shrinking CHECKPOINT_OFFSETS_HOURS does not make
+# a checkpoint fire soon; the target is still wherever that midnight falls,
+# which could be seconds or up to ~24h from "now" depending on time of day.
+# Demo mode sidesteps the date anchoring entirely: checkpoints become short
+# delays measured from when the checkpoint loop starts, not from a calendar
+# date, so the first one fires in seconds regardless of wall-clock time. It
+# changes nothing about pricing, suppression, or the approval gate itself -
+# only when the loop chooses to look.
+DEMO_MODE = os.getenv("PF_DEMO_MODE", "") == "1"
+DEMO_CHECKPOINT_DELAYS = (timedelta(seconds=5), timedelta(seconds=15), timedelta(seconds=30))
+
 
 class DemurrageResult(BaseModel):
     """Handed back to the parent when the arc closes."""
@@ -100,6 +116,9 @@ class DemurrageArc:
         self.gated_out_at: datetime | None = None
         self.gate_out_doc_id: str = ""
         self.lfd: LfdCalculation | None = None
+        # The availability timestamp self.lfd was derived from, so a later
+        # report can be detected and the calculation redone.
+        self.lfd_basis: datetime | None = None
         self.appointment_failures = 0
         self.spend_usd = Decimal("0")
         self.approvals: set[str] = set()
@@ -214,21 +233,7 @@ class DemurrageArc:
         # never as a retryable error.
         await self._poll_availability(container, inp.discharged_at)
 
-        self.lfd = await workflow.execute_activity(
-            act.compute_effective_lfd,
-            act.EffectiveLfdInput(
-                terms=terms,
-                discharged_at=inp.discharged_at,
-                available_at=self.available_at,
-                availability_misses=[
-                    e
-                    for e in self.evidence
-                    if e.kind in (EventKind.AVAILABILITY_MISS, EventKind.CONTAINER_AVAILABLE)
-                ],
-            ),
-            start_to_close_timeout=SHORT,
-            retry_policy=IO_RETRY,
-        )
+        await self._compute_lfd(terms, inp.discharged_at)
 
         # Phase 2: checkpoints at LFD-72h, -48h, -24h, then daily.
         await self._checkpoint_loop(container, terms, clock_start, inp)
@@ -239,6 +244,12 @@ class DemurrageArc:
 
         # Wait for gate-out if it has not already arrived.
         await workflow.wait_condition(lambda: self.gated_out_at is not None)
+
+        # Settle the calculation on everything now known. Availability is often
+        # reported after the polling window closed, and the figure handed to the
+        # parent is the one the dispute is later built on.
+        if self.available_at != self.lfd_basis:
+            await self._compute_lfd(terms, inp.discharged_at)
 
         billed_end = self.gated_out_at.date()  # type: ignore[union-attr]
         accrued = await self._accrued(terms, clock_start, billed_end)
@@ -255,6 +266,32 @@ class DemurrageArc:
         )
 
     # ---------------- internals ----------------
+
+    async def _compute_lfd(self, terms: ContractTerms, discharged_at: datetime) -> None:
+        """(Re)compute the effective last free day from what is known right now.
+
+        Not a one-shot calculation. Availability is routinely reported late -
+        that lateness is the whole of Leak 01 - and it arrives by signal, after
+        the initial polling window has closed. Recomputing when the timestamp
+        finally lands is what turns a late report into a shifted last free day
+        rather than an argument we never made.
+        """
+        self.lfd = await workflow.execute_activity(
+            act.compute_effective_lfd,
+            act.EffectiveLfdInput(
+                terms=terms,
+                discharged_at=discharged_at,
+                available_at=self.available_at,
+                availability_misses=[
+                    e
+                    for e in self.evidence
+                    if e.kind in (EventKind.AVAILABILITY_MISS, EventKind.CONTAINER_AVAILABLE)
+                ],
+            ),
+            start_to_close_timeout=SHORT,
+            retry_policy=IO_RETRY,
+        )
+        self.lfd_basis = self.available_at
 
     async def _poll_availability(self, container: ContainerInput, discharged_at: datetime) -> None:
         """Poll until grounded. Each miss is a successful adverse observation."""
@@ -305,14 +342,21 @@ class DemurrageArc:
         assert self.lfd is not None
         effective_lfd = self.lfd.effective_lfd
 
-        for hours in CHECKPOINT_OFFSETS_HOURS:
-            if self.gated_out_at is not None:
-                return
-            target = datetime.combine(effective_lfd, datetime.min.time()) - timedelta(hours=hours)
-            if target <= _now():
-                continue
-            await self._sleep_until(target)
-            await self._assess_and_maybe_act(container, terms, clock_start, inp)
+        if DEMO_MODE:
+            for delay in DEMO_CHECKPOINT_DELAYS:
+                if self.gated_out_at is not None:
+                    return
+                await self._sleep_until(_now() + delay)
+                await self._assess_and_maybe_act(container, terms, clock_start, inp)
+        else:
+            for hours in CHECKPOINT_OFFSETS_HOURS:
+                if self.gated_out_at is not None:
+                    return
+                target = datetime.combine(effective_lfd, datetime.min.time()) - timedelta(hours=hours)
+                if target <= _now():
+                    continue
+                await self._sleep_until(target)
+                await self._assess_and_maybe_act(container, terms, clock_start, inp)
 
         # Past the LFD: reassess daily while blocked.
         while self.gated_out_at is None:
@@ -399,6 +443,10 @@ class DemurrageArc:
         inp: DemurrageInput,
     ) -> None:
         assert self.lfd is not None
+
+        # Availability may have been reported since the last calculation.
+        if self.available_at != self.lfd_basis:
+            await self._compute_lfd(terms, inp.discharged_at)
 
         assessment = await workflow.execute_activity(
             act.assess_container_risk,

@@ -31,6 +31,14 @@ with workflow.unsafe.imports_passed_through():
     )
     from temporal_backend.activities import registry as act
 
+    # Pure arithmetic over two Decimals, so it is safe to call from workflow
+    # code - but it must be imported *here*, inside the pass-through block.
+    # Importing it lazily inside the settlement path instead pulls
+    # ``llm_client`` (via ``draft_dispute``) into the sandbox at runtime, whose
+    # module-level ``load_dotenv()`` calls ``os.getcwd()`` and is refused with
+    # RestrictedWorkflowAccessError - which failed the arc on every offer.
+    from agents.case_builder.draft_dispute import evaluate_settlement
+
 def _now() -> datetime:
     """Workflow time as tz-naive UTC.
 
@@ -135,6 +143,26 @@ class DisputeArc:
     def findings(self) -> list[str]:
         """Queried by the demo to show the Part 541 defect that was caught."""
         return self.audit.codes if self.audit else []
+
+    @workflow.query
+    def letter_draft(self) -> dict | None:
+        """The drafted letter, so the console can show the actual argument made.
+
+        The letter is the system's output in the only form a carrier ever sees.
+        Exposing the body and its citations is what lets a reader check that the
+        chronology is cited rather than take the claim on trust.
+        """
+        if self.letter is None:
+            return None
+        return {
+            "invoice_id": self.letter.invoice_id,
+            "container_id": self.letter.container_id,
+            "subject": self.letter.subject,
+            "body": self.letter.body,
+            "amount_contested_usd": str(self.letter.amount_contested_usd),
+            "citations": list(self.letter.citations),
+            "drafted_at": self.letter.drafted_at.isoformat(),
+        }
 
     @workflow.query
     def state(self) -> dict:
@@ -277,8 +305,6 @@ class DisputeArc:
         assert self.letter is not None
         offer = self.offer_usd or Decimal("0")
         claim = self.letter.amount_contested_usd
-
-        from agents.case_builder.draft_dispute import evaluate_settlement
 
         may_accept, reason = evaluate_settlement(
             offer, claim, mandate_fraction=inp.settlement_mandate_fraction

@@ -132,18 +132,25 @@ def noncompliant_invoice() -> Invoice:
 
 
 async def _wait_for(client, wf_id: str, timeout: float = 90.0, interval: float = 1.0) -> None:
-    """Block until a workflow with ``wf_id`` exists on the server.
+    """Block until a *running* workflow with ``wf_id`` is on the server.
 
     Child arcs are spawned by the parent only after it finishes the (live, and
     therefore slow) contract-term extraction, so signalling a child on a fixed
     delay races the parent. Poll ``describe`` until the child is up instead.
+
+    Waiting on existence alone is not enough: ``describe`` also succeeds for
+    closed executions, so a previous run of the same workflow id - exactly what
+    ``--fresh`` leaves behind - satisfies it instantly. The signals then land on
+    a dead run and are reported as an arc that "has already closed". Requiring
+    RUNNING is what makes the wait mean what it says.
     """
     loop = asyncio.get_event_loop()
     deadline = loop.time() + timeout
     while True:
         try:
-            await client.get_workflow_handle(wf_id).describe()
-            return
+            desc = await client.get_workflow_handle(wf_id).describe()
+            if desc.status is not None and desc.status.name == "RUNNING":
+                return
         except RPCError as exc:
             if "not found" not in str(exc).lower():
                 raise
@@ -276,7 +283,7 @@ async def drive(client, handle: WorkflowHandle, step: float) -> None:
     )
     await pause()
 
-    log.info("D23 empty_returned -> DetentionArc closes ($1,485 prevented)")
+    log.info("D23 empty_returned -> DetentionArc closes ($1,530 prevented)")
     await _signal(
         det, "empty_returned", [EMPTY_IN, "eir::MSKU7481920::D23"], "D23 empty_returned"
     )

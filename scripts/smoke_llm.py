@@ -82,7 +82,7 @@ def run_extract_terms() -> None:
     )
     print(f"  confidence:      {terms.confidence:.2f}")
     print(f"  clocks found:    {len(terms.clocks)}")
-    for clock in terms.clocks:
+    for clock in terms.clocks.values():
         tiers = ", ".join(
             f"d{t.from_day}-{t.to_day or '∞'}=${t.rate_usd}" for t in clock.tiers
         )

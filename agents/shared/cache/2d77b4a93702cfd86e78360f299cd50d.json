@@ -1,0 +1,6 @@
+{
+  "model": "gemini/gemini-2.5-flash",
+  "prompt": "CONTAINER\n  return depot: PIER 400 EMPTY DEPOT\n  carrier:      MAERSK\n  type:         40HC\n\nADVISORY\n--------\nCARRIER OPERATIONAL ADVISORY - 12 March 2026\nEffective immediately through 18 March 2026, MAERSK will NOT accept empty\nreturns of 40' high-cube dry containers at the PIER 400 EMPTY DEPOT (Los\nAngeles) due to yard congestion. Empties may instead be returned to the ITS\nLONG BEACH depot during this window. Reefer and 20' equipment are unaffected.\n\n--------\n\nDoes this advisory restrict empty returns for this container at its depot?",
+  "response": "{\n  \"affects_this_container\": true,\n  \"depot\": \"PIER 400 EMPTY DEPOT\",\n  \"restriction_starts\": \"2026-03-12\",\n  \"restriction_ends\": \"2026-03-18\",\n  \"reasoning\": \"The advisory explicitly states that MAERSK will not accept empty returns of 40' high-cube dry containers (which includes 40HC) at the PIER 400 EMPTY DEPOT, matching the container's carrier, depot, and type. The restriction window is also clearly defined.\",\n  \"confidence\": 1.0\n}",
+  "cached_at": 1786212145.0467403
+}
